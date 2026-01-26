@@ -1,0 +1,21 @@
+rate_hz: 500
+duration_s: 10
+units: "si"
+seed: 1
+motion:
+  type: "sine"
+  amplitude_deg: 5
+  freq_hz: 1.0
+gyro_noise_std: 0.01
+accel_noise_std: 0.05
+gyro_bias: [0.02, -0.01, 0.005]
+gyro_bias_drift_std: 0.0001
+vibration_burst:
+  enabled: false
+  amplitude: 0.2
+  freq_hz: 20
+  duty_cycle: 0.1
+udp:
+  enabled: false
+  addr: "127.0.0.1:9000"
+  format: "csv"
