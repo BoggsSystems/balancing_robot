@@ -6,6 +6,7 @@
 #include "bmi088.h"
 #include "control.h"
 #include "imu_input.h"
+#include "rc_input.h"
 #include "spi.h"
 #include "system.h"
 #include "uart.h"
@@ -17,6 +18,7 @@
 #define OUTPUT_EVERY_N 50
 #define CALIB_SAMPLES 200
 #define TARGET_PITCH 0.0f
+#define MOTOR_LIMIT 10.0f
 
 static void print_hex16(int16_t v) {
 	const char hex[] = "0123456789ABCDEF";
@@ -48,12 +50,15 @@ int main(void) {
 
 	attitude_filter_t filter;
 	attitude_init(&filter);
-	pid_t pid;
+	pid_ctrl_t pid;
 	pid_init(&pid, 2.5f, 0.0f, 0.05f, 10.0f);
 
 #if USE_EMULATOR_UART
 	imu_csv_parser_t parser;
 	imu_csv_init(&parser);
+	rc_parser_t rc_parser;
+	rc_init(&rc_parser);
+	rc_cmd_t rc = {0};
 	float last_t = 0.0f;
 	unsigned int sample_count = 0;
 	unsigned int calib_count = 0;
@@ -64,6 +69,7 @@ int main(void) {
 
 	while (1) {
 #if USE_EMULATOR_UART
+		rc_poll(&rc_parser, &rc);
 		imu_sample_t s;
 		if (imu_csv_poll(&parser, &s)) {
 			float dt = (last_t > 0.0f) ? (s.t - last_t) : (1.0f / 500.0f);
@@ -92,7 +98,8 @@ int main(void) {
 			pitch -= pitch_offset;
 
 			float error = TARGET_PITCH - pitch;
-			float control = pid_update(&pid, error, dt);
+			float balance = pid_update(&pid, error, dt);
+			motor_cmd_t cmd = motor_mix(balance, rc.throttle, rc.turn, MOTOR_LIMIT);
 
 			if ((sample_count++ % OUTPUT_EVERY_N) == 0) {
 				uart_write_str("RP ");
@@ -100,7 +107,11 @@ int main(void) {
 				uart_write_str(" ");
 				print_float(pitch);
 				uart_write_str(" U ");
-				print_float(control);
+				print_float(balance);
+				uart_write_str(" L ");
+				print_float(cmd.left);
+				uart_write_str(" R ");
+				print_float(cmd.right);
 				uart_write_str("\r\n");
 			}
 		}

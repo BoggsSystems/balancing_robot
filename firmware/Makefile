@@ -9,7 +9,7 @@ EMU ?= 1
 UPDI_PORT ?= /dev/tty.usbmodemXXXX
 UART_PORT ?= /dev/tty.usbmodemYYYY
 
-SRC := src/main.c src/system.c src/uart.c src/spi.c src/bmi088.c src/imu_input.c src/attitude.c src/control.c
+SRC := src/main.c src/system.c src/uart.c src/spi.c src/bmi088.c src/imu_input.c src/attitude.c src/control.c src/rc_input.c
 BUILD := build
 ELF := $(BUILD)/firmware.elf
 HEX := $(BUILD)/firmware.hex

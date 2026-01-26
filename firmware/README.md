@@ -38,6 +38,8 @@ make monitor UART_PORT=/dev/tty.usbmodemYYYY BAUD=115200
 - Emulator input mode is enabled by default (`EMU=1`) and expects CSV lines:
   `t,gx,gy,gz,ax,ay,az` (SI units). Disable with `make build EMU=0`.
 - For 500 Hz CSV streaming, use a higher UART baud (e.g. `BAUD=460800`).
+- Optional RC input (assumed format) can be streamed over UART:
+  `throttle,turn,enable` where throttle/turn are in [-1,1].
 
 ## No hardware? Use the host simulator
 
@@ -50,4 +52,22 @@ cd ../..
 go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim > out_angles.csv
 ```
 
-Output CSV: `t,roll,pitch,control`
+Output CSV: `t,roll,pitch,balance,left,right`
+
+### Simulated RC input (optional)
+
+You can drive throttle/turn with a simple time-stamped CSV:
+
+```
+t,throttle,turn,enable
+0.0,0.0,0.0,1
+1.0,0.2,0.0,1
+2.0,0.2,0.3,1
+4.0,0.0,0.0,0
+```
+
+Run the sim with:
+
+```bash
+go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --rc rc_profile.csv > out_angles.csv
+```
