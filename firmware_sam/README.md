@@ -23,6 +23,9 @@ Firmware port for the SAME51J20A Curiosity Nano with BMI088 IMU and TMC2209 step
 | Right DIR | PA12 |
 | Right EN | PA13 |
 | **LED** | PA14 |
+| **Back rest arm (Hitec HS-422)** | TCC5 PWM, PB10 |
+
+> **Back rest arm**: Retracts (up) on START BALANCE; extends (down) before balance shutdown so the robot falls backward onto it. Critical timing — see `docs/back-rest-arm.md`.
 
 ## Prerequisites
 

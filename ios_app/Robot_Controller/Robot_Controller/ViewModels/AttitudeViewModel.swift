@@ -83,6 +83,11 @@ final class AttitudeViewModel {
         lastDriveSendTime = Date()
     }
 
+    /// Disarm (stop balance): send DISARM so firmware runs arm down → wait → disable balance.
+    func disarm() {
+        bluetoothService.send(.disarm)
+    }
+
     /// Start IMU streaming (R: P: Y:). Call after connect; separates connection from initiation.
     func startStreaming() {
         guard isConnected else { return }

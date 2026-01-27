@@ -33,6 +33,8 @@ Options (via `go run ./cmd/e2e-bridge`):
 - `--port` – TCP port (default `9001`)
 - `--duration_s` – imu-streamer duration, `0` = until Ctrl+C
 - `--telemetry-hz` – max rate to send R: P: to clients (default `20`)
+- `--arm-rest-pitch` – pitch (deg) for `R: P: Y:` when disarmed, e.g. resting on back-rest arm (default `-25`)
+- `--motion` – motion type for imu-streamer (overrides config), e.g. `static` for balancing-at-0
 - `--imu-streamer` – path to binary (default `./bin/imu-streamer`)
 - `--sim` – path to sim (default `./firmware/tools/sim`)
 
@@ -45,14 +47,15 @@ Options (via `go run ./cmd/e2e-bridge`):
 
 Connection and streaming are separate: after Connect, no `R: P: Y:` is sent until the app sends **START**. Tap **Start** to send `START` and receive roll/pitch from the sim (e.g. sine motion from `configs/default.yaml`). Tap **Stop** to send `STOP` and pause. When you add motor controls and send `M:throttle,turn`, the bridge forwards them to the sim.
 
-## 3. START / STOP (gate IMU streaming)
+## 3. START / STOP / DISARM
 
 The app sends:
 
-- **START** – begin sending `R: P: Y:` to this client. No telemetry until START.
+- **START** – begin sending `R: P: Y:` to this client; clears **disarmed**. No telemetry until START.
 - **STOP** – pause; connection stays open.
+- **DISARM** – set **disarmed**. While disarmed, the bridge sends fixed `R:0 P:<arm-rest-pitch> Y:0` instead of sim roll/pitch (resting-on-arm pose). **START** clears disarmed and resumes sim telemetry.
 
-The bridge keeps imu-streamer and sim running; it only sends telemetry to a client when that client has sent START.
+The bridge keeps imu-streamer and sim running; it only sends telemetry to a client when that client has sent START. When disarmed, telemetry is overridden to a fixed tilt for safe-shutdown / back-rest-arm E2E.
 
 ## 4. Controlling the simulated robot
 
@@ -67,3 +70,11 @@ go run ./cmd/e2e-bridge --config configs/default.yaml --duration_s 0 --port 9001
 ```
 
 Or use a config with different motion (e.g. `scripted`, `impulse_push`).
+
+**Balancing at 0:** use `--motion=static` so imu-streamer produces upright IMU; the sim and bridge will stream ~R:0 P:0 Y:0:
+
+```bash
+go run ./cmd/e2e-bridge --duration_s 0 --motion=static
+```
+
+**Resting on arm (disarmed pose):** adjust the fixed pitch when the app sends DISARM with `--arm-rest-pitch` (default `-25` deg).

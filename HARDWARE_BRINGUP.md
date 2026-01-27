@@ -18,6 +18,7 @@ Use this checklist to get from "power on" to "balanced test" quickly.
 - AVR64DD32 Curiosity Nano board
 - BMI088 IMU module
 - Motor driver board + motors + power supply
+- **Back rest arm**: Hitec HS-422 servo (PWM TCC5, pin PB10) — see `docs/back-rest-arm.md`
 - USB cables for both MCU and (if needed) motor controller
 - Wires and headers for SPI/UART
 
@@ -65,6 +66,12 @@ Use this checklist to get from "power on" to "balanced test" quickly.
 - Place robot on ground.
 - Adjust PID gains as needed.
 - Increase output limits cautiously.
+
+## 9) Back rest arm (Hitec HS-422)
+
+- **Arm UP** on START BALANCE; **arm DOWN** before shutting balance off so the robot falls back onto it.
+- Critical timing: lower arm, then disable balance. See `docs/back-rest-arm.md`.
+- PWM: TCC5, pin PB10 — map to timer/channel on target MCU.
 
 ## Quick notes to fill in on Saturday
 

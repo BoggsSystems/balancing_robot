@@ -23,12 +23,20 @@ func main() {
 	port := flag.Int("port", 9001, "TCP port for iOS E2E clients")
 	durationS := flag.String("duration_s", "0", "duration in seconds for imu-streamer (0 = run until Ctrl+C)")
 	telemetryHz := flag.Float64("telemetry-hz", 20, "max rate (Hz) to send R: P: Y: to clients")
+	armRestPitch := flag.Float64("arm-rest-pitch", -25, "pitch (deg) for R: P: Y: when disarmed (resting on arm)")
+	motion := flag.String("motion", "", "motion type for imu-streamer (e.g. static for balancing-at-0); overrides config")
 	imuStreamer := flag.String("imu-streamer", "./bin/imu-streamer", "path to imu-streamer binary")
 	sim := flag.String("sim", "./firmware/tools/sim", "path to firmware sim binary")
 	flag.Parse()
 
+	// Build imu-streamer args
+	imuArgs := []string{"--config", *config, "--duration_s", *durationS}
+	if *motion != "" {
+		imuArgs = append(imuArgs, "--motion", *motion)
+	}
+
 	// Start imu-streamer
-	cmdImu := exec.Command(*imuStreamer, "--config", *config, "--duration_s", *durationS)
+	cmdImu := exec.Command(*imuStreamer, imuArgs...)
 	cmdImu.Stderr = os.Stderr
 	imuOut, err := cmdImu.StdoutPipe()
 	if err != nil {
@@ -133,9 +141,11 @@ func main() {
 	log.Printf("E2E bridge listening on :%d (telemetry %.0f Hz); imu-streamer | sim running", *port, *telemetryHz)
 
 	// connState: per-connection; streaming gates whether we send R: P: Y: (START/STOP)
+	// disarmed: when true, send fixed R:0 P:armRestPitch Y:0 (resting on arm) instead of sim
 	type connState struct {
 		mu        sync.Mutex
 		streaming bool
+		disarmed  bool
 	}
 
 	// Accept loop
@@ -149,6 +159,7 @@ func main() {
 			state := &connState{streaming: false}
 
 			// Send loop: at telemetry_hz, send latest R: P: Y: only when state.streaming
+			// When disarmed, send fixed R:0 P:armRestPitch Y:0 (resting on arm)
 			interval := time.Duration(float64(time.Second) / *telemetryHz)
 			ticker := time.NewTicker(interval)
 			go func(c net.Conn, st *connState) {
@@ -157,27 +168,33 @@ func main() {
 				for range ticker.C {
 					st.mu.Lock()
 					on := st.streaming
+					dis := st.disarmed
 					st.mu.Unlock()
 					if !on {
 						continue
 					}
-					mu.Lock()
-					r, p := latestRoll, latestPitch
-					ok := hasTelemetry
-					mu.Unlock()
-					if !ok {
-						continue
+					var msg string
+					if dis {
+						msg = fmt.Sprintf("R:0 P:%.2f Y:0\n", *armRestPitch)
+					} else {
+						mu.Lock()
+						r, p := latestRoll, latestPitch
+						ok := hasTelemetry
+						mu.Unlock()
+						if !ok {
+							continue
+						}
+						rollDeg := r * 180 / math.Pi
+						pitchDeg := p * 180 / math.Pi
+						msg = fmt.Sprintf("R:%.2f P:%.2f Y:0\n", rollDeg, pitchDeg)
 					}
-					rollDeg := r * 180 / math.Pi
-					pitchDeg := p * 180 / math.Pi
-					msg := fmt.Sprintf("R:%.2f P:%.2f Y:0\n", rollDeg, pitchDeg)
 					if _, err := c.Write([]byte(msg)); err != nil {
 						break
 					}
 				}
 			}(conn, state)
 
-			// Read loop: START/STOP gate streaming; M: and LED as before
+			// Read loop: START/STOP gate streaming; DISARM sets disarmed (cleared on START); M: and LED as before
 			go func(c net.Conn, st *connState) {
 				sc := bufio.NewScanner(c)
 				for sc.Scan() {
@@ -189,10 +206,15 @@ func main() {
 					case "START":
 						st.mu.Lock()
 						st.streaming = true
+						st.disarmed = false
 						st.mu.Unlock()
 					case "STOP":
 						st.mu.Lock()
 						st.streaming = false
+						st.mu.Unlock()
+					case "DISARM":
+						st.mu.Lock()
+						st.disarmed = true
 						st.mu.Unlock()
 					default:
 						if strings.HasPrefix(line, "M:") {

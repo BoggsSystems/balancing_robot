@@ -4,7 +4,9 @@ import Foundation
 enum Command {
     case ledToggle
     case motor(throttle: Float, turn: Float)
-    
+    /// Safe shutdown: firmware runs arm down → wait → disable balance.
+    case disarm
+
     /// Convert command to string for UART transmission
     var serialized: String {
         switch self {
@@ -12,6 +14,8 @@ enum Command {
             return "LED\n"
         case .motor(let throttle, let turn):
             return String(format: "M:%.1f,%.1f\n", throttle, turn)
+        case .disarm:
+            return "DISARM\n"
         }
     }
     

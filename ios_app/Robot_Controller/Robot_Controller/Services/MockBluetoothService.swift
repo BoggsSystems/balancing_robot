@@ -81,6 +81,8 @@ final class MockBluetoothService: NSObject {
             print("[Mock] Motor command: throttle=\(throttle), turn=\(turn)")
             lastThrottle = Double(throttle)
             lastTurn = Double(turn)
+        case .disarm:
+            print("[Mock] DISARM (arm down, then balance off)")
         }
     }
     

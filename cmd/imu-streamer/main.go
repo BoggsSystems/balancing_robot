@@ -20,6 +20,7 @@ func main() {
 	rateHz := flag.Float64("rate_hz", 0, "sample rate in Hz (overrides config)")
 	durationS := flag.Float64("duration_s", -1, "duration in seconds, 0=infinite (overrides config when >=0)")
 	seed := flag.Int64("seed", 0, "random seed (overrides config)")
+	motionType := flag.String("motion", "", "motion type (overrides config: static, sine, slow_tilt, impulse_push, scripted)")
 	udpEnabled := flag.Bool("udp", false, "enable UDP output (overrides config)")
 	udpAddr := flag.String("udp_addr", "", "udp host:port (overrides config)")
 	units := flag.String("units", "", "units: si or deg (overrides config)")
@@ -46,6 +47,9 @@ func main() {
 	}
 	if *units != "" {
 		cfg.Units = strings.ToLower(*units)
+	}
+	if *motionType != "" {
+		cfg.Motion.Type = *motionType
 	}
 	if cfg.RateHz <= 0 {
 		cfg.RateHz = 500
