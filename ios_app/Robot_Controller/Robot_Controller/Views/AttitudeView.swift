@@ -4,7 +4,8 @@ import SwiftUI
 struct AttitudeView: View {
     @Bindable var viewModel: AttitudeViewModel
     var onDisconnect: () -> Void
-    
+    @State private var joystickResetId = UUID()
+
     var body: some View {
         VStack(spacing: 24) {
             // Header with connection status
@@ -56,9 +57,26 @@ struct AttitudeView: View {
                 )
             }
             .padding(.horizontal)
-            
+
+            // Drive: E-Stop + Joystick (enabled when streaming)
+            VStack(spacing: 16) {
+                Button("E-STOP") {
+                    viewModel.eStop()
+                    joystickResetId = UUID()
+                }
+                .buttonStyle(PrimaryButtonStyle(isDestructive: true))
+                .disabled(!viewModel.isConnected)
+
+                JoystickView(
+                    onChange: { viewModel.setDriveInput(throttle: $0, turn: $1) },
+                    disabled: !viewModel.isStreaming
+                )
+                .id(joystickResetId)
+            }
+            .padding(.horizontal)
+
             Spacer()
-            
+
             // Control panel
             ControlPanelView(
                 ledState: viewModel.ledState,

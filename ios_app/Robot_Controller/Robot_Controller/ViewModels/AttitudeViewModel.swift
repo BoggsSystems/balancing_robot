@@ -54,9 +54,33 @@ final class AttitudeViewModel {
         bluetoothService.send(.ledToggle)
     }
     
-    /// Send motor command (for future use)
+    /// Send motor command. Used by the joystick; throttled to ~20 Hz except 0,0.
     func sendMotorCommand(throttle: Float, turn: Float) {
         bluetoothService.send(.motor(throttle: throttle, turn: turn))
+    }
+
+    private var lastDriveSendTime: Date?
+    private let driveSendInterval: TimeInterval = 0.05
+
+    /// Update drive from joystick. Throttled to ~20 Hz; 0,0 is sent immediately.
+    func setDriveInput(throttle: Float, turn: Float) {
+        let now = Date()
+        if throttle == 0 && turn == 0 {
+            sendMotorCommand(throttle: 0, turn: 0)
+            lastDriveSendTime = now
+            return
+        }
+        if let last = lastDriveSendTime, now.timeIntervalSince(last) < driveSendInterval {
+            return
+        }
+        sendMotorCommand(throttle: throttle, turn: turn)
+        lastDriveSendTime = now
+    }
+
+    /// E‑Stop: send M:0,0 immediately. Does not disconnect.
+    func eStop() {
+        sendMotorCommand(throttle: 0, turn: 0)
+        lastDriveSendTime = Date()
     }
 
     /// Start IMU streaming (R: P: Y:). Call after connect; separates connection from initiation.
@@ -66,8 +90,9 @@ final class AttitudeViewModel {
         isStreaming = true
     }
 
-    /// Stop IMU streaming. Connection stays open; use disconnect to close.
+    /// Stop IMU streaming. Connection stays open; use disconnect to close. Sends M:0,0 to clear drive.
     func stopStreaming() {
+        sendMotorCommand(throttle: 0, turn: 0)
         bluetoothService.stopStreaming()
         isStreaming = false
     }

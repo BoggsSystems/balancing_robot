@@ -22,9 +22,9 @@ final class MockBluetoothService: NSObject {
     private var time: Double = 0
     private var ledState: Bool = false
     
-    // Simulated motion parameters
-    private var baseRoll: Double = 0
-    private var basePitch: Double = 0
+    // Simulated motion: last M: values drive a bias in the fake attitude
+    private var lastThrottle: Double = 0
+    private var lastTurn: Double = 0
     
     // MARK: - Public Methods (same interface as BluetoothService)
     
@@ -79,9 +79,8 @@ final class MockBluetoothService: NSObject {
             print("[Mock] LED toggled: \(ledState ? "ON" : "OFF")")
         case .motor(let throttle, let turn):
             print("[Mock] Motor command: throttle=\(throttle), turn=\(turn)")
-            // Simulate motor effect on attitude
-            basePitch += Double(throttle) * 0.1
-            baseRoll += Double(turn) * 0.1
+            lastThrottle = Double(throttle)
+            lastTurn = Double(turn)
         }
     }
     
@@ -105,20 +104,16 @@ final class MockBluetoothService: NSObject {
     
     private func generateSimulatedData() {
         time += 0.1
-        
-        // Simulate gentle oscillation like a balancing robot
-        // Plus some noise to make it look realistic
+
+        // Bias from last M: (throttle → pitch, turn → roll)
+        let basePitch = lastThrottle * 3.0
+        let baseRoll = lastTurn * 3.0
+
         let noise = { Double.random(in: -0.5...0.5) }
-        
-        // Slow sine wave for base motion
         let roll = baseRoll + 5.0 * sin(time * 0.5) + noise()
         let pitch = basePitch + 3.0 * sin(time * 0.7 + 1.0) + noise()
         let yaw = 2.0 * sin(time * 0.3) + noise()
-        
-        // Decay the base offsets (simulate returning to center)
-        baseRoll *= 0.98
-        basePitch *= 0.98
-        
+
         let attitude = Attitude(roll: roll, pitch: pitch, yaw: yaw)
         
         // Format like real UART data
