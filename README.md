@@ -113,3 +113,17 @@ make monitor UART_PORT=/dev/tty.usbmodemYYYY BAUD=115200
 ```
 
 See `firmware/README.md` for details.
+
+## SAME51J20A firmware (production target)
+
+Full balancing robot firmware for SAME51J20A Curiosity Nano with:
+- BMI088 IMU on SERCOM1 SPI
+- XBee Bluetooth on SERCOM0 UART
+- TMC2209 stepper motor drivers
+
+```bash
+cd firmware_sam
+make
+```
+
+See `firmware_sam/README.md` for pin mappings and configuration.

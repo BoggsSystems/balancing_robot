@@ -1,0 +1,16 @@
+# Build artifacts
+firmware/build/
+firmware_sam/build/
+
+# macOS
+.DS_Store
+
+# Xcode
+ios_app/*.xcodeproj/xcuserdata/
+ios_app/*.xcworkspace/xcuserdata/
+ios_app/DerivedData/
+ios_app/.build/
+
+# Python
+__pycache__/
+*.pyc
