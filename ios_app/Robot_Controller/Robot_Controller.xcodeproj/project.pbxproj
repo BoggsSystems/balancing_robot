@@ -1,0 +1,560 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B08553A22F29276400C23268 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B08553A12F29276400C23268 /* CoreBluetooth.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B085533B2F29276700C23268 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B08553252F29276400C23268 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B085532C2F29276400C23268;
+			remoteInfo = Robot_Controller;
+		};
+		B08553452F29276700C23268 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B08553252F29276400C23268 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B085532C2F29276400C23268;
+			remoteInfo = Robot_Controller;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B085532D2F29276400C23268 /* Robot_Controller.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Robot_Controller.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B085533A2F29276700C23268 /* Robot_ControllerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Robot_ControllerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B08553442F29276700C23268 /* Robot_ControllerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Robot_ControllerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B08553A12F29276400C23268 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B085532F2F29276400C23268 /* Robot_Controller */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Robot_Controller;
+			sourceTree = "<group>";
+		};
+		B085533D2F29276700C23268 /* Robot_ControllerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Robot_ControllerTests;
+			sourceTree = "<group>";
+		};
+		B08553472F29276700C23268 /* Robot_ControllerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Robot_ControllerUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B085532A2F29276400C23268 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B08553A22F29276400C23268 /* CoreBluetooth.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B08553372F29276700C23268 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B08553412F29276700C23268 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B08553242F29276400C23268 = {
+			isa = PBXGroup;
+			children = (
+				B085532F2F29276400C23268 /* Robot_Controller */,
+				B085533D2F29276700C23268 /* Robot_ControllerTests */,
+				B08553472F29276700C23268 /* Robot_ControllerUITests */,
+				B085532E2F29276400C23268 /* Products */,
+				B08554212F2928C700C23268 /* Recovered References */,
+			);
+			sourceTree = "<group>";
+		};
+		B085532E2F29276400C23268 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B085532D2F29276400C23268 /* Robot_Controller.app */,
+				B085533A2F29276700C23268 /* Robot_ControllerTests.xctest */,
+				B08553442F29276700C23268 /* Robot_ControllerUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B08554212F2928C700C23268 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				B08553A12F29276400C23268 /* CoreBluetooth.framework */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B085532C2F29276400C23268 /* Robot_Controller */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B085534E2F29276700C23268 /* Build configuration list for PBXNativeTarget "Robot_Controller" */;
+			buildPhases = (
+				B08553292F29276400C23268 /* Sources */,
+				B085532A2F29276400C23268 /* Frameworks */,
+				B085532B2F29276400C23268 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B085532F2F29276400C23268 /* Robot_Controller */,
+			);
+			name = Robot_Controller;
+			packageProductDependencies = (
+			);
+			productName = Robot_Controller;
+			productReference = B085532D2F29276400C23268 /* Robot_Controller.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B08553392F29276700C23268 /* Robot_ControllerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B08553512F29276700C23268 /* Build configuration list for PBXNativeTarget "Robot_ControllerTests" */;
+			buildPhases = (
+				B08553362F29276700C23268 /* Sources */,
+				B08553372F29276700C23268 /* Frameworks */,
+				B08553382F29276700C23268 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B085533C2F29276700C23268 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B085533D2F29276700C23268 /* Robot_ControllerTests */,
+			);
+			name = Robot_ControllerTests;
+			packageProductDependencies = (
+			);
+			productName = Robot_ControllerTests;
+			productReference = B085533A2F29276700C23268 /* Robot_ControllerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B08553432F29276700C23268 /* Robot_ControllerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B08553542F29276700C23268 /* Build configuration list for PBXNativeTarget "Robot_ControllerUITests" */;
+			buildPhases = (
+				B08553402F29276700C23268 /* Sources */,
+				B08553412F29276700C23268 /* Frameworks */,
+				B08553422F29276700C23268 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B08553462F29276700C23268 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B08553472F29276700C23268 /* Robot_ControllerUITests */,
+			);
+			name = Robot_ControllerUITests;
+			packageProductDependencies = (
+			);
+			productName = Robot_ControllerUITests;
+			productReference = B08553442F29276700C23268 /* Robot_ControllerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B08553252F29276400C23268 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					B085532C2F29276400C23268 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					B08553392F29276700C23268 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = B085532C2F29276400C23268;
+					};
+					B08553432F29276700C23268 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = B085532C2F29276400C23268;
+					};
+				};
+			};
+			buildConfigurationList = B08553282F29276400C23268 /* Build configuration list for PBXProject "Robot_Controller" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B08553242F29276400C23268;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B085532E2F29276400C23268 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B085532C2F29276400C23268 /* Robot_Controller */,
+				B08553392F29276700C23268 /* Robot_ControllerTests */,
+				B08553432F29276700C23268 /* Robot_ControllerUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B085532B2F29276400C23268 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B08553382F29276700C23268 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B08553422F29276700C23268 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B08553292F29276400C23268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B08553362F29276700C23268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B08553402F29276700C23268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B085533C2F29276700C23268 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B085532C2F29276400C23268 /* Robot_Controller */;
+			targetProxy = B085533B2F29276700C23268 /* PBXContainerItemProxy */;
+		};
+		B08553462F29276700C23268 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B085532C2F29276400C23268 /* Robot_Controller */;
+			targetProxy = B08553452F29276700C23268 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		B085534C2F29276700C23268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B085534D2F29276700C23268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B085534F2F29276700C23268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "BoggsSystems.Robot-Controller";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B08553502F29276700C23268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "BoggsSystems.Robot-Controller";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B08553522F29276700C23268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "BoggsSystems.Robot-ControllerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Robot_Controller.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Robot_Controller";
+			};
+			name = Debug;
+		};
+		B08553532F29276700C23268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "BoggsSystems.Robot-ControllerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Robot_Controller.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Robot_Controller";
+			};
+			name = Release;
+		};
+		B08553552F29276700C23268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "BoggsSystems.Robot-ControllerUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Robot_Controller;
+			};
+			name = Debug;
+		};
+		B08553562F29276700C23268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "BoggsSystems.Robot-ControllerUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Robot_Controller;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B08553282F29276400C23268 /* Build configuration list for PBXProject "Robot_Controller" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B085534C2F29276700C23268 /* Debug */,
+				B085534D2F29276700C23268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B085534E2F29276700C23268 /* Build configuration list for PBXNativeTarget "Robot_Controller" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B085534F2F29276700C23268 /* Debug */,
+				B08553502F29276700C23268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B08553512F29276700C23268 /* Build configuration list for PBXNativeTarget "Robot_ControllerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B08553522F29276700C23268 /* Debug */,
+				B08553532F29276700C23268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B08553542F29276700C23268 /* Build configuration list for PBXNativeTarget "Robot_ControllerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B08553552F29276700C23268 /* Debug */,
+				B08553562F29276700C23268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B08553252F29276400C23268 /* Project object */;
+}

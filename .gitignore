@@ -6,6 +6,8 @@ firmware_sam/build/
 .DS_Store
 
 # Xcode
+**/xcuserdata/
+**/.xcuserstate
 ios_app/*.xcodeproj/xcuserdata/
 ios_app/*.xcworkspace/xcuserdata/
 ios_app/DerivedData/
