@@ -51,6 +51,8 @@ Example: `R:12.3 P:-4.5 Y:0.0\r\n`
 
 | Command | Format | Description |
 |---------|--------|-------------|
+| Start streaming | `START\n` | Begin IMU telemetry (R: P: Y:). Connection is separate from initiation. |
+| Stop streaming | `STOP\n` | Pause IMU telemetry; connection stays open. |
 | LED Toggle | `LED\n` | Toggle onboard LED |
 | Motor | `M:<throttle>,<turn>\n` | Motor control (future) |
 

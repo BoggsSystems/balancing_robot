@@ -13,6 +13,8 @@ final class AttitudeViewModel {
     private(set) var attitude: Attitude = .zero
     private(set) var ledState: Bool = false
     private(set) var lastUpdateTime: Date?
+    /// IMU streaming on/off. Connection is separate; tap Start to begin R: P: Y:.
+    private(set) var isStreaming: Bool = false
     
     var isConnected: Bool { bluetoothService.state.isConnected }
     var connectionState: DeviceState { bluetoothService.state }
@@ -27,6 +29,11 @@ final class AttitudeViewModel {
     init(mockService: MockBluetoothService) {
         self.bluetoothService = mockService
         setupCallback(mockService)
+    }
+    
+    init(bluetoothService: any BluetoothServiceProtocol) {
+        self.bluetoothService = bluetoothService
+        setupCallback(bluetoothService)
     }
     
     private func setupCallback(_ service: any BluetoothServiceProtocol) {
@@ -50,6 +57,19 @@ final class AttitudeViewModel {
     /// Send motor command (for future use)
     func sendMotorCommand(throttle: Float, turn: Float) {
         bluetoothService.send(.motor(throttle: throttle, turn: turn))
+    }
+
+    /// Start IMU streaming (R: P: Y:). Call after connect; separates connection from initiation.
+    func startStreaming() {
+        guard isConnected else { return }
+        bluetoothService.startStreaming()
+        isStreaming = true
+    }
+
+    /// Stop IMU streaming. Connection stays open; use disconnect to close.
+    func stopStreaming() {
+        bluetoothService.stopStreaming()
+        isStreaming = false
     }
     
     /// Reset attitude to zero (for calibration reference)

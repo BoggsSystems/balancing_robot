@@ -1,6 +1,7 @@
 # Build artifacts
 firmware/build/
 firmware_sam/build/
+/e2e-bridge
 
 # macOS
 .DS_Store

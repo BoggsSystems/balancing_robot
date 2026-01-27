@@ -8,6 +8,11 @@ protocol BluetoothServiceProtocol: AnyObject {
     
     func send(_ command: Command)
     func disconnect()
+    
+    /// Start IMU streaming (R: P: Y:). No effect until after connect. Separates connection from initiation.
+    func startStreaming()
+    /// Stop IMU streaming. Connection remains; use disconnect() to close.
+    func stopStreaming()
 }
 
 // Conform both services to the protocol

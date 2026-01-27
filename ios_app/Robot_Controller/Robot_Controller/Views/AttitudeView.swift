@@ -17,6 +17,18 @@ struct AttitudeView: View {
                 StatusBadgeView(state: viewModel.connectionState)
             }
             .padding(.horizontal)
+
+            // Start/Stop IMU streaming (connection is separate from initiation)
+            Button(viewModel.isStreaming ? "Stop" : "Start") {
+                if viewModel.isStreaming {
+                    viewModel.stopStreaming()
+                } else {
+                    viewModel.startStreaming()
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(!viewModel.isConnected)
+            .opacity(viewModel.isConnected ? 1 : 0.6)
             
             // Horizon indicator
             HorizonView(roll: viewModel.attitude.roll, pitch: viewModel.attitude.pitch)

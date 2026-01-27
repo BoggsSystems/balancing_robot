@@ -101,6 +101,14 @@ final class BluetoothService: NSObject {
         
         peripheral.writeValue(command.data, for: characteristic, type: .withResponse)
     }
+
+    func startStreaming() {
+        sendRaw("START\n")
+    }
+
+    func stopStreaming() {
+        sendRaw("STOP\n")
+    }
     
     /// Send raw string data
     func sendRaw(_ string: String) {

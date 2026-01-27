@@ -44,14 +44,22 @@ final class MockBluetoothService: NSObject {
         }
     }
     
-    /// Simulate connecting (call this directly in mock mode)
+    /// Simulate connecting (call this directly in mock mode). Does not start streaming; call startStreaming() to receive data.
     func simulateConnect() {
         state = .connecting
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             self?.state = .connected
-            self?.startSimulation()
         }
+    }
+
+    func startStreaming() {
+        guard state == .connected else { return }
+        startSimulation()
+    }
+
+    func stopStreaming() {
+        stopSimulation()
     }
     
     func connect(to peripheral: CBPeripheral) {

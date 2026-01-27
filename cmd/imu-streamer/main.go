@@ -18,7 +18,7 @@ import (
 func main() {
 	cfgPath := flag.String("config", "configs/default.yaml", "path to YAML config")
 	rateHz := flag.Float64("rate_hz", 0, "sample rate in Hz (overrides config)")
-	durationS := flag.Float64("duration_s", 0, "duration in seconds (overrides config)")
+	durationS := flag.Float64("duration_s", -1, "duration in seconds, 0=infinite (overrides config when >=0)")
 	seed := flag.Int64("seed", 0, "random seed (overrides config)")
 	udpEnabled := flag.Bool("udp", false, "enable UDP output (overrides config)")
 	udpAddr := flag.String("udp_addr", "", "udp host:port (overrides config)")
@@ -32,7 +32,7 @@ func main() {
 	if *rateHz > 0 {
 		cfg.RateHz = *rateHz
 	}
-	if *durationS > 0 {
+	if *durationS >= 0 {
 		cfg.DurationS = *durationS
 	}
 	if *seed != 0 {

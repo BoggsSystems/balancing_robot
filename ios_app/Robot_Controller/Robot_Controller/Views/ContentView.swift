@@ -11,6 +11,7 @@ struct ContentView: View {
             if bluetoothService.state.isConnected {
                 if let viewModel = attitudeViewModel {
                     AttitudeView(viewModel: viewModel) {
+                        viewModel.stopStreaming()
                         bluetoothService.disconnect()
                     }
                 }
@@ -41,6 +42,7 @@ struct SimulatorContentView: View {
             if isConnected {
                 if let viewModel = attitudeViewModel {
                     AttitudeView(viewModel: viewModel) {
+                        viewModel.stopStreaming()
                         mockService.disconnect()
                         isConnected = false
                     }
@@ -90,10 +92,73 @@ struct SimulatorConnectionView: View {
     }
 }
 
+// MARK: - E2E Mode Content View
+
+/// Connects to e2e-bridge (imu-streamer | sim) for end-to-end testing.
+struct E2EContentView: View {
+    @State private var e2eService = E2EBluetoothService()
+    @State private var attitudeViewModel: AttitudeViewModel?
+    
+    var body: some View {
+        Group {
+            if e2eService.state.isConnected {
+                if let viewModel = attitudeViewModel {
+                    AttitudeView(viewModel: viewModel) {
+                        viewModel.stopStreaming()
+                        e2eService.disconnect()
+                    }
+                }
+            } else {
+                E2EConnectionView {
+                    e2eService.connect()
+                }
+            }
+        }
+        .onAppear {
+            attitudeViewModel = AttitudeViewModel(bluetoothService: e2eService)
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+/// Connection view for E2E: connect to e2e-bridge on host.
+struct E2EConnectionView: View {
+    let onConnect: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            Image(systemName: "cable.connector")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+            
+            Text("E2E Mode")
+                .font(.title2.bold())
+            
+            Text("Connect to e2e-bridge (imu-streamer | sim)")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            Spacer()
+            
+            Button("Connect to E2E Bridge") {
+                onConnect()
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .padding(.bottom, 40)
+        }
+    }
+}
+
 #Preview("Real Bluetooth") {
     ContentView()
 }
 
 #Preview("Simulator Mode") {
     SimulatorContentView()
+}
+
+#Preview("E2E Mode") {
+    E2EContentView()
 }

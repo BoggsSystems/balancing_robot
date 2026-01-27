@@ -69,6 +69,33 @@ static int parse_rc_line(const char *line, rc_entry_t *out) {
 	return 1;
 }
 
+/* Live RC from e2e-bridge: "RC,throttle,turn,enabled" (from app M: command) */
+static int parse_rc_live(const char *line, rc_entry_t *out) {
+	if (strncmp(line, "RC,", 3) != 0) {
+		return 0;
+	}
+	char tmp[128];
+	strncpy(tmp, line + 3, sizeof(tmp) - 1);
+	tmp[sizeof(tmp) - 1] = '\0';
+
+	char *save = NULL;
+	char *tok = strtok_r(tmp, ",", &save);
+	float vals[3];
+	int count = 0;
+	while (tok && count < 3) {
+		vals[count++] = strtof(tok, NULL);
+		tok = strtok_r(NULL, ",", &save);
+	}
+	if (count != 3) {
+		return 0;
+	}
+	out->t = 0.0f;
+	out->throttle = vals[0];
+	out->turn = vals[1];
+	out->enabled = (vals[2] != 0.0f);
+	return 1;
+}
+
 static rc_entry_t *load_rc_profile(const char *path, size_t *out_count) {
 	FILE *f = fopen(path, "r");
 	if (!f) {
@@ -125,12 +152,20 @@ int main(int argc, char **argv) {
 	rc_entry_t *rc_entries = NULL;
 	size_t rc_idx = 0;
 	rc_entry_t rc = {0};
+	int use_live_rc = 0;
+	rc_entry_t live_rc = {0};
 	if (rc_path) {
 		rc_entries = load_rc_profile(rc_path, &rc_count);
 	}
 
 	puts("t,roll,pitch,balance,left,right");
 	while (fgets(line, sizeof(line), stdin)) {
+		/* Live RC from e2e-bridge (app M: command) overrides file-based RC */
+		if (parse_rc_live(line, &live_rc)) {
+			use_live_rc = 1;
+			continue;
+		}
+
 		float t, gx, gy, gz, ax, ay, az;
 		if (!parse_line(line, &t, &gx, &gy, &gz, &ax, &ay, &az)) {
 			continue;
@@ -158,7 +193,9 @@ int main(int argc, char **argv) {
 		roll -= roll_offset;
 		pitch -= pitch_offset;
 
-		if (rc_entries) {
+		if (use_live_rc) {
+			rc = live_rc;
+		} else if (rc_entries) {
 			while (rc_idx + 1 < rc_count && rc_entries[rc_idx + 1].t <= t) {
 				rc_idx++;
 			}

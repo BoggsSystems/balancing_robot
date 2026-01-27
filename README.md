@@ -100,6 +100,7 @@ Defined in `internal/model/frames.go`:
 - `make run`
 - `make test`
 - `make lint` (placeholder)
+- `make e2e-bridge` – end-to-end: imu-streamer | sim, TCP :9001 for iOS app (see [docs/e2e.md](docs/e2e.md))
 
 ## AVR64DD32 firmware (Cursor CLI workflow)
 
