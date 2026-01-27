@@ -1,6 +1,8 @@
 #ifndef MATH_H
 #define MATH_H
 
+#include <stdint.h>
+
 // Use ARM Cortex-M4 FPU for basic operations
 // For transcendental functions, use simple approximations
 
@@ -11,11 +13,10 @@ static inline float fabsf(float x) {
 // Fast inverse square root (Quake-style, good enough for IMU)
 static inline float invsqrtf(float x) {
     float xhalf = 0.5f * x;
-    int i = *(int*)&x;
-    i = 0x5f3759df - (i >> 1);
-    x = *(float*)&i;
-    x = x * (1.5f - xhalf * x * x);
-    return x;
+    union { float f; uint32_t i; } u = { .f = x };
+    u.i = 0x5f3759dfU - (u.i >> 1);
+    u.f = u.f * (1.5f - xhalf * u.f * u.f);
+    return u.f;
 }
 
 static inline float sqrtf(float x) {

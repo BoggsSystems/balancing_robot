@@ -29,13 +29,13 @@ Firmware port for the SAME51J20A Curiosity Nano with BMI088 IMU and TMC2209 step
 
 ## Prerequisites
 
-Install ARM toolchain:
+Install the ARM GCC toolchain (macOS with Homebrew):
 
 ```bash
-brew install --cask gcc-arm-embedded
-# or
 brew install arm-none-eabi-gcc
 ```
+
+This provides `arm-none-eabi-gcc`, `arm-none-eabi-objcopy`, `arm-none-eabi-size`. The project is known to build with this toolchain.
 
 ## Build
 
@@ -43,9 +43,27 @@ brew install arm-none-eabi-gcc
 make
 ```
 
-## Flash
+## Flash (download to the MCU)
 
-Use Microchip MPLAB IPE, Segger J-Link, or OpenOCD with the onboard debugger.
+We **build** from the command line (`make`); we **do not use an IDE to compile**. To program the SAME51, load `build/balancing_robot.bin` (or `.elf`) with one of these:
+
+### Recommended: Microchip MPLAB IPE
+
+**MPLAB IPE** (Integrated Programming Environment) is a standalone flasher — no full IDE.
+
+1. Download and install from [Microchip MPLAB IPE](https://www.microchip.com/en-us/tools-resources/develop/mplab-integrated-programming-environment).
+2. Connect the **SAME51 Curiosity Nano** via USB (onboard **EDBG** debugger).
+3. In IPE: choose device **ATSAME51J20A**, select `build/balancing_robot.bin`, then **Program**.
+
+### Alternative: MPLAB X IDE
+
+**MPLAB X IDE** is a full IDE. You can use it only to flash: create a simple project or use “Make and Program,” or build with `make` and use MPLAB X’s programming tool to load `build/balancing_robot.bin`. The Curiosity Nano’s EDBG is supported directly.
+
+### Optional: OpenOCD (command line)
+
+With an OpenOCD config for the SAME51 and the board’s CMSIS-DAP/EDBG interface, you can flash from the command line. Requires extra setup.
+
+**Summary:** Use **MPLAB IPE** to download to the SAME51; no IDE is required for editing or building.
 
 ## Pin Adjustments
 

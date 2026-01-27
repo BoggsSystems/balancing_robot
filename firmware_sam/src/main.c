@@ -71,6 +71,7 @@ static void led_off(void) {
     PORTA->OUTSET = (1 << LED_PIN);
 }
 
+__attribute__((unused))
 static void led_toggle(void) {
     PORTA->OUTTGL = (1 << LED_PIN);
 }
