@@ -80,7 +80,7 @@ static int parse_rc_line(const char *line, rc_entry_t *out) {
 	return 1;
 }
 
-/* Live RC from e2e-bridge: "RC,throttle,turn,enabled" (from app M: command) */
+/* Live RC from e2e-bridge: "RC,throttle,turn,enabled[,mode]" */
 static int parse_rc_live(const char *line, rc_entry_t *out) {
 	if (strncmp(line, "RC,", 3) != 0) {
 		return 0;
@@ -91,19 +91,28 @@ static int parse_rc_live(const char *line, rc_entry_t *out) {
 
 	char *save = NULL;
 	char *tok = strtok_r(tmp, ",", &save);
-	float vals[3];
+	float vals[4];
 	int count = 0;
-	while (tok && count < 3) {
+	while (tok && count < 4) {
 		vals[count++] = strtof(tok, NULL);
 		tok = strtok_r(NULL, ",", &save);
 	}
-	if (count != 3) {
+	if (count < 3) {
 		return 0;
 	}
 	out->t = 0.0f;
 	out->throttle = vals[0];
 	out->turn = vals[1];
 	out->enabled = (vals[2] != 0.0f);
+	if (count >= 4) {
+		int mode = (int)vals[3];
+		if (mode < 0) {
+			mode = 0;
+		}
+		out->mode = mode;
+	} else {
+		out->mode = 0;
+	}
 	return 1;
 }
 
@@ -298,6 +307,54 @@ int main(int argc, char **argv) {
 				float phase = (2.0f * PI * script_time) / period_s;
 				cmd_throttle = 0.3f;
 				cmd_turn = turn_amp * sinf(phase);
+			} else if (rc.mode == 5) {
+				cmd_throttle = 0.0f;
+				cmd_turn = 0.35f;
+			} else if (rc.mode == 6) {
+				const float period_s = 2.0f;
+				float phase = script_time;
+				while (phase >= period_s) {
+					phase -= period_s;
+				}
+				cmd_throttle = (phase < 1.0f) ? 0.3f : 0.0f;
+				cmd_turn = 0.0f;
+			} else if (rc.mode == 7) {
+				const float period_s = 6.0f;
+				float phase = script_time;
+				while (phase >= period_s) {
+					phase -= period_s;
+				}
+				if (phase < 1.0f) {
+					cmd_throttle = 0.3f;
+					cmd_turn = 0.0f;
+				} else if (phase < 1.5f) {
+					cmd_throttle = 0.0f;
+					cmd_turn = 0.35f;
+				} else if (phase < 2.5f) {
+					cmd_throttle = 0.3f;
+					cmd_turn = 0.0f;
+				} else if (phase < 3.0f) {
+					cmd_throttle = 0.0f;
+					cmd_turn = 0.35f;
+				} else if (phase < 4.0f) {
+					cmd_throttle = 0.3f;
+					cmd_turn = 0.0f;
+				} else if (phase < 4.5f) {
+					cmd_throttle = 0.0f;
+					cmd_turn = 0.35f;
+				} else if (phase < 5.5f) {
+					cmd_throttle = 0.3f;
+					cmd_turn = 0.0f;
+				} else {
+					cmd_throttle = 0.0f;
+					cmd_turn = 0.35f;
+				}
+			} else if (rc.mode == 8) {
+				const float PI = 3.14159265f;
+				const float period_s = 3.0f;
+				float phase = (2.0f * PI * script_time) / period_s;
+				cmd_throttle = 0.3f;
+				cmd_turn = 0.40f * sinf(phase);
 			}
 			script_time += control_dt;
 		}

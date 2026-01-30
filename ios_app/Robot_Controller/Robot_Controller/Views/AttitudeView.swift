@@ -86,6 +86,15 @@ struct AttitudeView: View {
             }
             .padding(.horizontal)
 
+            MovementSelectionView(
+                current: viewModel.currentMovement,
+                queued: viewModel.queuedMovement,
+                patterns: MovementPattern.all,
+                isEnabled: viewModel.isStreaming,
+                onSelect: { viewModel.selectMovement($0) }
+            )
+            .padding(.horizontal)
+
             Spacer()
 
             // Control panel

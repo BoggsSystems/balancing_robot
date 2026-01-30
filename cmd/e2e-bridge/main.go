@@ -68,9 +68,15 @@ func main() {
 		_ = cmdSim.Wait()
 	}()
 
-	// Pending RC: app sends M:throttle,turn; we inject "RC,throttle,turn,1" before the next IMU line
+	// Pending RC: app sends M:throttle,turn or MODE:n; we inject "RC,throttle,turn,1,mode"
 	var pendingRCMu sync.Mutex
-	var pendingRCLine string
+	var pendingRC bool
+	var pendingThrottle float64
+	var pendingTurn float64
+	var pendingMode int
+	var lastThrottle float64
+	var lastTurn float64
+	var lastMode int
 
 	// Merge goroutine: read imu-streamer, inject any pending RC before each IMU line, write to sim stdin
 	go func() {
@@ -78,11 +84,15 @@ func main() {
 		for sc.Scan() {
 			line := sc.Text()
 			pendingRCMu.Lock()
-			pl := pendingRCLine
-			pendingRCLine = ""
+			pend := pendingRC
+			th := pendingThrottle
+			tr := pendingTurn
+			md := pendingMode
+			pendingRC = false
 			pendingRCMu.Unlock()
-			if pl != "" {
-				if _, err := pipeWriter.Write([]byte(pl)); err != nil {
+			if pend {
+				rcLine := fmt.Sprintf("RC,%g,%g,1,%d\n", th, tr, md)
+				if _, err := pipeWriter.Write([]byte(rcLine)); err != nil {
 					return
 				}
 			}
@@ -223,10 +233,29 @@ func main() {
 								if throttle, e1 := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64); e1 == nil {
 									if turn, e2 := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64); e2 == nil {
 										pendingRCMu.Lock()
-										pendingRCLine = fmt.Sprintf("RC,%g,%g,1\n", throttle, turn)
+										lastThrottle = throttle
+										lastTurn = turn
+										pendingThrottle = throttle
+										pendingTurn = turn
+										pendingMode = lastMode
+										pendingRC = true
 										pendingRCMu.Unlock()
 									}
 								}
+							}
+						} else if strings.HasPrefix(line, "MODE:") {
+							modeStr := strings.TrimSpace(strings.TrimPrefix(line, "MODE:"))
+							if mode, e := strconv.Atoi(modeStr); e == nil {
+								if mode < 0 {
+									mode = 0
+								}
+								pendingRCMu.Lock()
+								lastMode = mode
+								pendingThrottle = lastThrottle
+								pendingTurn = lastTurn
+								pendingMode = mode
+								pendingRC = true
+								pendingRCMu.Unlock()
 							}
 						}
 					}

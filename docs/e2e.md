@@ -59,7 +59,9 @@ The bridge keeps imu-streamer and sim running; it only sends telemetry to a clie
 
 ## 4. Controlling the simulated robot
 
-The app can send motor commands; when you wire `sendMotorCommand(throttle:turn:)` to a control (e.g. joystick or sliders), it sends `M:throttle,turn` to the bridge. The bridge injects `RC,throttle,turn,1` into the sim before the next IMU line, so the sim uses that for `motor_mix` (throttle and turn) until the next `M:` arrives. The sim’s balance PID always runs; RC adds forward/back and left/right.
+The app can send motor commands; when you wire `sendMotorCommand(throttle:turn:)` to a control (e.g. joystick or sliders), it sends `M:throttle,turn` to the bridge. The bridge injects `RC,throttle,turn,1,mode` into the sim before the next IMU line, so the sim uses that for `motor_mix` (throttle and turn) and scripted modes. The sim’s balance PID always runs; RC adds forward/back and left/right.
+
+You can also send scripted movement selections via `MODE:<n>` (0 = manual, 1 = circle, 2-4 = figure-8, 5 = spin, 6 = stop-go, 7 = square, 8 = slalom). The bridge applies the mode with the last throttle/turn.
 
 ## 5. Optional: run the bridge with custom config
 

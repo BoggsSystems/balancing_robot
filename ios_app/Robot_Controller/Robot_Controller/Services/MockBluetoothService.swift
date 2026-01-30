@@ -83,6 +83,8 @@ final class MockBluetoothService: NSObject {
             lastTurn = Double(turn)
         case .disarm:
             print("[Mock] DISARM (arm down, then balance off)")
+        case .movementMode(let mode):
+            print("[Mock] Movement mode: \(mode)")
         }
     }
     

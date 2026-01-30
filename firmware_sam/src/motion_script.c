@@ -36,6 +36,62 @@ void motion_script_step(motion_script_t *s, uint8_t mode, float dt,
 		float phase = (2.0f * PI * s->t) / period_s;
 		*out_throttle = 0.3f;
 		*out_turn = turn_amp * sinf(phase);
+	} else if (mode == 5) {
+		// Spin in place: zero throttle, constant turn.
+		*out_throttle = 0.0f;
+		*out_turn = 0.35f;
+	} else if (mode == 6) {
+		// Stop-and-go: 1s forward, 1s stop.
+		const float period_s = 2.0f;
+		float phase = s->t;
+		while (phase >= period_s) {
+			phase -= period_s;
+		}
+		if (phase < 1.0f) {
+			*out_throttle = 0.3f;
+		} else {
+			*out_throttle = 0.0f;
+		}
+		*out_turn = 0.0f;
+	} else if (mode == 7) {
+		// Square path: forward 1s, turn 0.5s, repeat.
+		const float period_s = 6.0f;
+		float phase = s->t;
+		while (phase >= period_s) {
+			phase -= period_s;
+		}
+		if (phase < 1.0f) {
+			*out_throttle = 0.3f;
+			*out_turn = 0.0f;
+		} else if (phase < 1.5f) {
+			*out_throttle = 0.0f;
+			*out_turn = 0.35f;
+		} else if (phase < 2.5f) {
+			*out_throttle = 0.3f;
+			*out_turn = 0.0f;
+		} else if (phase < 3.0f) {
+			*out_throttle = 0.0f;
+			*out_turn = 0.35f;
+		} else if (phase < 4.0f) {
+			*out_throttle = 0.3f;
+			*out_turn = 0.0f;
+		} else if (phase < 4.5f) {
+			*out_throttle = 0.0f;
+			*out_turn = 0.35f;
+		} else if (phase < 5.5f) {
+			*out_throttle = 0.3f;
+			*out_turn = 0.0f;
+		} else {
+			*out_throttle = 0.0f;
+			*out_turn = 0.35f;
+		}
+	} else if (mode == 8) {
+		// Slalom: forward with higher-amplitude sinusoidal turn.
+		const float PI = 3.14159265f;
+		const float period_s = 3.0f;
+		float phase = (2.0f * PI * s->t) / period_s;
+		*out_throttle = 0.3f;
+		*out_turn = 0.40f * sinf(phase);
 	} else {
 		*out_throttle = 0.0f;
 		*out_turn = 0.0f;

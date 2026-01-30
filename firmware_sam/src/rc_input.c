@@ -68,6 +68,20 @@ bool rc_poll(rc_parser_t *p, rc_cmd_t *out) {
             }
             p->buf[p->idx] = '\0';
             p->idx = 0;
+            if (strncmp(p->buf, "MODE:", 5) == 0) {
+                int mode = (int)strtol(p->buf + 5, NULL, 10);
+                if (mode < 0) {
+                    mode = 0;
+                }
+                if (mode > 255) {
+                    mode = 255;
+                }
+                p->last.mode = (uint8_t)mode;
+                if (out) {
+                    *out = p->last;
+                }
+                return true;
+            }
             rc_cmd_t parsed;
             if (parse_line(p->buf, &parsed)) {
                 p->last = parsed;

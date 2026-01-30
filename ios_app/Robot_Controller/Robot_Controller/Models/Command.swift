@@ -6,6 +6,8 @@ enum Command {
     case motor(throttle: Float, turn: Float)
     /// Safe shutdown: firmware runs arm down → wait → disable balance.
     case disarm
+    /// Scripted movement mode (0 = manual).
+    case movementMode(Int)
 
     /// Convert command to string for UART transmission
     var serialized: String {
@@ -16,6 +18,8 @@ enum Command {
             return String(format: "M:%.1f,%.1f\n", throttle, turn)
         case .disarm:
             return "DISARM\n"
+        case .movementMode(let mode):
+            return "MODE:\(mode)\n"
         }
     }
     
