@@ -128,3 +128,7 @@ make
 ```
 
 See `firmware_sam/README.md` for pin mappings and configuration.
+
+## Robot initialization
+
+See [docs/initialization.md](docs/initialization.md) for the startup-to-balance flow and stand-up ramp diagram.

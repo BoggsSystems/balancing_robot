@@ -18,6 +18,8 @@
 #define CALIB_SAMPLES   200
 #define TARGET_PITCH    0.0f
 #define MOTOR_LIMIT     1000.0f  // steps/sec limit
+#define STANDUP_DURATION_S 1.5f
+#define STANDUP_START_PITCH_DEG -25.0f
 
 // LED pin on SAME51 Curiosity Nano (directly, typical is PA14)
 #define LED_PIN 14
@@ -152,6 +154,8 @@ int main(void) {
     // Timing
     const float dt = 1.0f / LOOP_HZ;
     uint32_t sample_count = 0;
+    bool standup_active = false;
+    float standup_elapsed = 0.0f;
 
     uint32_t last_tick = 0;
     while (1) {
@@ -169,11 +173,14 @@ int main(void) {
                 led_on();
                 tmc2209_enable(&motor_left, 1);
                 tmc2209_enable(&motor_right, 1);
+                standup_active = true;
+                standup_elapsed = 0.0f;
             } else {
                 led_off();
                 tmc2209_enable(&motor_left, 0);
                 tmc2209_enable(&motor_right, 0);
                 motion_script_reset(&script);
+                standup_active = false;
             }
             last_enabled = rc.enabled;
         }
@@ -207,12 +214,23 @@ int main(void) {
 
         // Balance control
         float target_pitch = TARGET_PITCH;
+        if (standup_active) {
+            float start_rad = STANDUP_START_PITCH_DEG * (3.14159265f / 180.0f);
+            float end_rad = TARGET_PITCH;
+            float t_norm = standup_elapsed / STANDUP_DURATION_S;
+            if (t_norm >= 1.0f) {
+                t_norm = 1.0f;
+                standup_active = false;
+            }
+            target_pitch = start_rad + (end_rad - start_rad) * t_norm;
+            standup_elapsed += dt;
+        }
 
         // Apply RC mixing
         float throttle = 0.0f;
         float turn = 0.0f;
         float scripted_target_pitch = TARGET_PITCH;
-        if (rc.enabled && rc.mode != 0) {
+        if (rc.enabled && rc.mode != 0 && !standup_active) {
             float script_throttle = 0.0f;
             float script_turn = 0.0f;
             motion_script_step(&script, rc.mode, dt, &script_throttle, &script_turn, &scripted_target_pitch);
@@ -220,8 +238,10 @@ int main(void) {
             turn = script_turn * 200.0f;
             target_pitch = scripted_target_pitch;
         } else if (rc.enabled) {
-            throttle = rc.throttle * 500.0f;
-            turn = rc.turn * 200.0f;
+            if (!standup_active) {
+                throttle = rc.throttle * 500.0f;
+                turn = rc.turn * 200.0f;
+            }
         }
         float error = target_pitch - pitch;
         float balance = pid_update(&pid, error, dt);

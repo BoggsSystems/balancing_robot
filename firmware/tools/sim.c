@@ -163,6 +163,8 @@ int main(int argc, char **argv) {
 	float script_time = 0.0f;
 	int last_mode = 0;
 	int last_enabled = 0;
+	int standup_active = 0;
+	float standup_elapsed = 0.0f;
 
 	attitude_filter_t filter;
 	attitude_init(&filter);
@@ -223,9 +225,9 @@ int main(int argc, char **argv) {
 	}
 
 	if (trace && step_emulate) {
-		puts("t,roll,pitch,balance,left,right,pos_left,pos_right,mode,cmd_throttle,cmd_turn");
+		puts("t,roll,pitch,balance,left,right,pos_left,pos_right,mode,cmd_throttle,cmd_turn,target_pitch_deg");
 	} else if (trace) {
-		puts("t,roll,pitch,balance,left,right,mode,cmd_throttle,cmd_turn");
+		puts("t,roll,pitch,balance,left,right,mode,cmd_throttle,cmd_turn,target_pitch_deg");
 	} else if (step_emulate) {
 		puts("t,roll,pitch,balance,left,right,pos_left,pos_right");
 	} else {
@@ -287,10 +289,32 @@ int main(int argc, char **argv) {
 			last_mode = rc.mode;
 			last_enabled = rc.enabled;
 		}
+		if (rc.enabled && !last_enabled) {
+			standup_active = 1;
+			standup_elapsed = 0.0f;
+		}
+		if (!rc.enabled) {
+			standup_active = 0;
+		}
 		float cmd_throttle = (rc.enabled) ? rc.throttle : 0.0f;
 		float cmd_turn = (rc.enabled) ? rc.turn : 0.0f;
 		float target_pitch = 0.0f;
-		if (rc.enabled && rc.mode != 0) {
+		float target_pitch_deg = 0.0f;
+		if (standup_active) {
+			const float DEG2RAD = 3.14159265f / 180.0f;
+			const float duration_s = 1.5f;
+			float start_rad = -25.0f * DEG2RAD;
+			float t_norm = standup_elapsed / duration_s;
+			if (t_norm >= 1.0f) {
+				t_norm = 1.0f;
+				standup_active = 0;
+			}
+			target_pitch = start_rad + (0.0f - start_rad) * t_norm;
+			target_pitch_deg = target_pitch * (180.0f / 3.14159265f);
+			cmd_throttle = 0.0f;
+			cmd_turn = 0.0f;
+			standup_elapsed += control_dt;
+		} else if (rc.enabled && rc.mode != 0) {
 			if (rc.mode == 1) {
 				cmd_throttle = 0.3f;
 				cmd_turn = 0.2f;
@@ -361,11 +385,13 @@ int main(int argc, char **argv) {
 				cmd_throttle = 0.0f;
 				cmd_turn = 0.0f;
 				target_pitch = 5.0f * DEG2RAD;
+				target_pitch_deg = 5.0f;
 			} else if (rc.mode == 10) {
 				const float DEG2RAD = 3.14159265f / 180.0f;
 				cmd_throttle = 0.0f;
 				cmd_turn = 0.0f;
 				target_pitch = -5.0f * DEG2RAD;
+				target_pitch_deg = -5.0f;
 			} else if (rc.mode == 11) {
 				const float PI = 3.14159265f;
 				const float DEG2RAD = 3.14159265f / 180.0f;
@@ -374,8 +400,12 @@ int main(int argc, char **argv) {
 				cmd_throttle = 0.0f;
 				cmd_turn = 0.0f;
 				target_pitch = (3.0f * DEG2RAD) * sinf(phase);
+				target_pitch_deg = target_pitch * (180.0f / 3.14159265f);
 			}
 			script_time += control_dt;
+		} else if (!rc.enabled) {
+			cmd_throttle = 0.0f;
+			cmd_turn = 0.0f;
 		}
 		float balance = pid_update(&pid, target_pitch - pitch, control_dt);
 		motor_cmd_t cmd = motor_mix(balance, cmd_throttle, cmd_turn, 10.0f);
@@ -407,9 +437,10 @@ int main(int argc, char **argv) {
 			}
 
 			if (trace) {
-				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%.3f,%.3f\n",
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%.3f,%.3f,%.2f\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right,
-					   step_pos_left, step_pos_right, rc.mode, cmd_throttle, cmd_turn);
+					   step_pos_left, step_pos_right, rc.mode, cmd_throttle, cmd_turn,
+					   target_pitch_deg);
 			} else {
 				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right,
@@ -417,9 +448,9 @@ int main(int argc, char **argv) {
 			}
 		} else {
 			if (trace) {
-				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%.3f,%.3f\n",
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%.3f,%.3f,%.2f\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right,
-					   rc.mode, cmd_throttle, cmd_turn);
+					   rc.mode, cmd_throttle, cmd_turn, target_pitch_deg);
 			} else {
 				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right);

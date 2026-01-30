@@ -56,6 +56,21 @@ The app sends:
 - **DISARM** – set **disarmed**. While disarmed, the bridge sends fixed `R:0 P:<arm-rest-pitch> Y:0` instead of sim roll/pitch (resting-on-arm pose). **START** clears disarmed and resumes sim telemetry.
 - **ARM** – clear **disarmed** and enable motion; sets `RC,...,1,...` for the sim.
 
+### Startup / stand-up test
+
+You can run a quick headless test that exercises START → ARM → MODE → DISARM:
+
+```bash
+python3 tools/e2e_startup_test.py
+```
+
+To visualize the stand-up ramp in the sim output (requires a trace CSV with
+`target_pitch_deg`), run:
+
+```bash
+python3 tools/plot_startup.py out_angles.csv
+```
+
 The bridge keeps imu-streamer and sim running; it only sends telemetry to a client when that client has sent START. When disarmed, telemetry is overridden to a fixed tilt for safe-shutdown / back-rest-arm E2E.
 
 ## 4. Controlling the simulated robot
