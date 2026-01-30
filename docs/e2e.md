@@ -19,6 +19,14 @@ From the repo root:
 make e2e-bridge
 ```
 
+**One-command E2E on Mac:** To start the bridge, run the startup test, and launch the iOS app in the Simulator in one go:
+
+```bash
+make run-e2e
+```
+
+Or run the script directly: `./tools/run_e2e_mac.sh`. The bridge stays running in the background; to stop it: `kill $(cat .e2e_bridge_pid)`.
+
 This builds `bin/imu-streamer` and `firmware/tools/sim`, then runs:
 
 ```

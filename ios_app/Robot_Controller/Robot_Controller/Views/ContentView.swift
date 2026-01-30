@@ -10,7 +10,7 @@ struct ContentView: View {
         Group {
             if bluetoothService.state.isConnected {
                 if let viewModel = attitudeViewModel {
-                    AttitudeView(viewModel: viewModel) {
+                    CommandControlView(viewModel: viewModel) {
                         viewModel.stopStreaming()
                         bluetoothService.disconnect()
                     }
@@ -41,7 +41,7 @@ struct SimulatorContentView: View {
         Group {
             if isConnected {
                 if let viewModel = attitudeViewModel {
-                    AttitudeView(viewModel: viewModel) {
+                    CommandControlView(viewModel: viewModel) {
                         viewModel.stopStreaming()
                         mockService.disconnect()
                         isConnected = false
@@ -96,56 +96,109 @@ struct SimulatorConnectionView: View {
 
 /// Connects to e2e-bridge (imu-streamer | sim) for end-to-end testing.
 struct E2EContentView: View {
-    @State private var e2eService = E2EBluetoothService()
+    private let config = AppConfig.shared
+    @State private var e2eService: E2EBluetoothService
     @State private var attitudeViewModel: AttitudeViewModel?
-    
+    @State private var showConfig = false
+
+    init() {
+        let c = AppConfig.shared
+        _e2eService = State(initialValue: E2EBluetoothService(host: c.e2eHost, port: c.e2ePort))
+    }
+
     var body: some View {
         Group {
             if e2eService.state.isConnected {
                 if let viewModel = attitudeViewModel {
-                    AttitudeView(viewModel: viewModel) {
+                    CommandControlView(viewModel: viewModel) {
                         viewModel.stopStreaming()
                         e2eService.disconnect()
                     }
                 }
             } else {
-                E2EConnectionView {
-                    e2eService.connect()
-                }
+                E2EConnectionView(
+                    state: e2eService.state,
+                    host: config.e2eHost,
+                    port: config.e2ePort,
+                    onConnect: { e2eService.connect() },
+                    onReconfigure: { showConfig = true }
+                )
             }
         }
         .onAppear {
             attitudeViewModel = AttitudeViewModel(bluetoothService: e2eService)
         }
+        .sheet(isPresented: $showConfig) {
+            NavigationStack {
+                ConfigurationView(onSave: {
+                    showConfig = false
+                    applyConfigAndReconnect()
+                })
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showConfig = false }
+                    }
+                }
+            }
+        }
         .preferredColorScheme(.dark)
+    }
+
+    private func applyConfigAndReconnect() {
+        e2eService.disconnect()
+        e2eService = E2EBluetoothService(host: config.e2eHost, port: config.e2ePort)
+        attitudeViewModel = AttitudeViewModel(bluetoothService: e2eService)
     }
 }
 
-/// Connection view for E2E: connect to e2e-bridge on host.
+/// Connection view for E2E: connect to e2e-bridge on host; shows status; Reconfigure opens config sheet.
 struct E2EConnectionView: View {
+    let state: DeviceState
+    let host: String
+    let port: UInt16
     let onConnect: () -> Void
-    
+    let onReconfigure: () -> Void
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 32) {
             Spacer()
-            
-            Image(systemName: "cable.connector")
-                .font(.system(size: 48))
-                .foregroundColor(.orange)
-            
-            Text("E2E Mode")
-                .font(.title2.bold())
-            
-            Text("Connect to e2e-bridge (imu-streamer | sim)")
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
-            Spacer()
-            
-            Button("Connect to E2E Bridge") {
-                onConnect()
+
+            ConnectionStatusView(
+                state: state,
+                host: host,
+                port: port
+            )
+
+            if case .connecting = state {
+                ProgressView()
+                    .scaleEffect(1.2)
+                    .padding()
             }
-            .buttonStyle(PrimaryButtonStyle())
+
+            Spacer()
+
+            switch state {
+            case .disconnected:
+                Button("Connect to E2E Bridge") {
+                    onConnect()
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.horizontal, 32)
+            case .error:
+                Button("Retry") {
+                    onConnect()
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.horizontal, 32)
+            case .connecting, .scanning, .connected:
+                EmptyView()
+            }
+
+            Button("Reconfigure host & port") {
+                onReconfigure()
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
             .padding(.bottom, 40)
         }
     }

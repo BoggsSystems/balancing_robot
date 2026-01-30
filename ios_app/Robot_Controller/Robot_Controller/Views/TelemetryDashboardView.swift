@@ -29,6 +29,9 @@ struct TelemetryDashboardView: View {
                 TelemetryPill(title: "Mode", value: modeText)
                 TelemetryPill(title: "Enabled", value: enabledText)
                 TelemetryPill(title: "State", value: stateText)
+                TelemetryPill(title: "Dist (m)", value: distanceText)
+                TelemetryPill(title: "Vel (m/s)", value: velocityText)
+                TelemetryPill(title: "Accel", value: accelText)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -52,6 +55,15 @@ struct TelemetryDashboardView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 LineChartView(values: balanceValues, lineColor: .pink)
+            }
+
+            if !distanceValues.allSatisfy({ $0 == 0 }) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Distance (m)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    LineChartView(values: distanceValues, lineColor: .cyan)
+                }
             }
         }
         .padding()
@@ -86,6 +98,10 @@ struct TelemetryDashboardView: View {
         samples.map { $0.balance ?? 0.0 }
     }
 
+    private var distanceValues: [Double] {
+        samples.map { $0.distanceM ?? 0.0 }
+    }
+
     private var modeText: String {
         if let mode = viewModel.latestTelemetry?.mode {
             return "\(mode)"
@@ -103,6 +119,27 @@ struct TelemetryDashboardView: View {
     private var stateText: String {
         if let st = viewModel.latestTelemetry?.state {
             return "\(st)"
+        }
+        return "-"
+    }
+
+    private var distanceText: String {
+        if let d = viewModel.latestTelemetry?.distanceM {
+            return String(format: "%.3f", d)
+        }
+        return "-"
+    }
+
+    private var velocityText: String {
+        if let v = viewModel.latestTelemetry?.velocityMps {
+            return String(format: "%.2f", v)
+        }
+        return "-"
+    }
+
+    private var accelText: String {
+        if let a = viewModel.latestTelemetry?.accelFwd {
+            return String(format: "%.2f", a)
         }
         return "-"
     }

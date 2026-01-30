@@ -20,6 +20,24 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
+/// Large green button for primary startup action (e.g. "Start")
+struct StartButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.title2.bold())
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.green)
+                    .opacity(configuration.isPressed ? 0.8 : 1.0)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
 /// Secondary button style for less prominent actions
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

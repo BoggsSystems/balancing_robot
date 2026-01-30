@@ -20,8 +20,10 @@ LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -nostdlib -lgcc
 
 SRC := src/startup.c src/system.c src/sercom_spi.c src/sercom_uart.c
+SRC += src/libc_stub.c
 SRC += src/bmi088.c src/attitude.c src/control.c src/rc_input.c
 SRC += src/motion_script.c
+SRC += src/odometry.c
 SRC += src/tmc2209.c src/main.c
 
 OBJ := $(SRC:src/%.c=$(BUILD)/%.o)

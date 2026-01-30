@@ -11,6 +11,7 @@
 #include "rc_input.h"
 #include "motion_script.h"
 #include "tmc2209.h"
+#include "odometry.h"
 
 // Configuration
 #define UART_BAUD       115200
@@ -153,6 +154,8 @@ int main(void) {
     motion_script_t script;
     motion_script_init(&script);
 
+    odometry_t odom = {0};
+
     // Calibration
     float roll_offset = 0.0f;
     float pitch_offset = 0.0f;
@@ -273,6 +276,13 @@ int main(void) {
         tmc2209_set_speed(&motor_left, (int32_t)cmd.left);
         tmc2209_set_speed(&motor_right, (int32_t)cmd.right);
 
+        // Update odometry (distance, velocity, acceleration)
+        odometry_update(&odom,
+                        motor_left.position, motor_right.position,
+                        motor_left.target_speed, motor_right.target_speed,
+                        imu.ax, imu.ay, imu.az,
+                        roll, pitch, dt);
+
         // Output telemetry (every 50 samples)
         if ((sample_count++ % 50) == 0) {
             float time_s = (float)sample_count / (float)LOOP_HZ;
@@ -298,6 +308,12 @@ int main(void) {
             print_int((int32_t)state);
             uart_write_str(" BAL:");
             print_float(balance, 1);
+            uart_write_str(" DIST:");
+            print_float(odom.distance_m, 3);
+            uart_write_str(" VEL:");
+            print_float(odom.velocity_mps, 2);
+            uart_write_str(" ACC:");
+            print_float(odom.accel_fwd, 2);
             uart_write_str("\r\n");
         }
 

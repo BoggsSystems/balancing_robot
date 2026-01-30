@@ -18,6 +18,9 @@ struct TelemetryParser {
         var mode: Int?
         var enabled: Bool?
         var state: Int?
+        var distanceM: Double?
+        var velocityMps: Double?
+        var accelFwd: Double?
 
         let tokens = trimmed.split(separator: " ")
         for token in tokens {
@@ -46,6 +49,12 @@ struct TelemetryParser {
                 }
             } else if str.hasPrefix("ST:") {
                 state = Int(str.dropFirst(3))
+            } else if str.hasPrefix("DIST:") {
+                distanceM = Double(str.dropFirst(5))
+            } else if str.hasPrefix("VEL:") {
+                velocityMps = Double(str.dropFirst(4))
+            } else if str.hasPrefix("ACC:") {
+                accelFwd = Double(str.dropFirst(4))
             }
         }
 
@@ -64,7 +73,10 @@ struct TelemetryParser {
             targetPitchDeg: targetPitch,
             mode: mode,
             enabled: enabled,
-            state: state
+            state: state,
+            distanceM: distanceM,
+            velocityMps: velocityMps,
+            accelFwd: accelFwd
         )
     }
 }

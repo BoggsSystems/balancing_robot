@@ -12,6 +12,9 @@ struct Telemetry: Equatable {
     var mode: Int?
     var enabled: Bool?
     var state: Int?
+    var distanceM: Double?
+    var velocityMps: Double?
+    var accelFwd: Double?
 
     var attitude: Attitude {
         Attitude(roll: roll, pitch: pitch, yaw: yaw)

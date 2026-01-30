@@ -131,9 +131,11 @@ final class AttitudeViewModel {
     }
 
     /// Start IMU streaming (R: P: Y:). Call after connect; separates connection from initiation.
+    /// Also sends ARM so scripted movements (MODE:n) execute; sim requires rc.enabled=1.
     func startStreaming() {
         guard isConnected else { return }
         bluetoothService.startStreaming()
+        bluetoothService.send(.arm)
         isStreaming = true
     }
 
@@ -208,7 +210,7 @@ final class AttitudeViewModel {
 
     func exportTelemetryCSV() -> URL? {
         guard !telemetrySamples.isEmpty else { return nil }
-        var lines = ["t,roll,pitch,yaw,left,right,balance,target_pitch,mode,enabled,state"]
+        var lines = ["t,roll,pitch,yaw,left,right,balance,target_pitch,mode,enabled,state,distance_m,velocity_mps,accel_fwd"]
         for sample in telemetrySamples {
             let t = sample.timestamp.map { String(format: "%.3f", $0) } ?? ""
             let left = sample.left.map { String(format: "%.2f", $0) } ?? ""
@@ -218,6 +220,9 @@ final class AttitudeViewModel {
             let mode = sample.mode.map(String.init) ?? ""
             let enabled = sample.enabled.map { $0 ? "1" : "0" } ?? ""
             let state = sample.state.map(String.init) ?? ""
+            let dist = sample.distanceM.map { String(format: "%.3f", $0) } ?? ""
+            let vel = sample.velocityMps.map { String(format: "%.2f", $0) } ?? ""
+            let acc = sample.accelFwd.map { String(format: "%.2f", $0) } ?? ""
             lines.append([
                 t,
                 String(format: "%.2f", sample.roll),
@@ -229,7 +234,10 @@ final class AttitudeViewModel {
                 tp,
                 mode,
                 enabled,
-                state
+                state,
+                dist,
+                vel,
+                acc
             ].joined(separator: ","))
         }
 

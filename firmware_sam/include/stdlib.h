@@ -37,4 +37,20 @@ static inline float strtof(const char *s, char **endptr) {
     return sign * (result + fraction);
 }
 
+// strtol: parse integer from string (base 10)
+static inline long strtol(const char *s, char **endptr, int base) {
+    (void)base;  // Only base 10 supported
+    long result = 0;
+    int sign = 1;
+    while (*s == ' ' || *s == '\t') s++;
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') s++;
+    while (*s >= '0' && *s <= '9') {
+        result = result * 10 + (*s - '0');
+        s++;
+    }
+    if (endptr) *endptr = (char *)s;
+    return sign * result;
+}
+
 #endif

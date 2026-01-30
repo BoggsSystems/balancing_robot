@@ -27,7 +27,14 @@ func main() {
 	motion := flag.String("motion", "", "motion type for imu-streamer (e.g. static for balancing-at-0); overrides config")
 	imuStreamer := flag.String("imu-streamer", "./bin/imu-streamer", "path to imu-streamer binary")
 	sim := flag.String("sim", "./firmware/tools/sim", "path to firmware sim binary")
+	simStepHz := flag.Float64("sim-step-hz", 10000, "step-hz for sim (enables pos_left/pos_right output for distance)")
 	flag.Parse()
+
+	// Build sim args (--step-hz enables odometry output: pos_left, pos_right)
+	simArgs := []string{}
+	if *simStepHz > 0 {
+		simArgs = append(simArgs, "--step-hz", strconv.FormatFloat(*simStepHz, 'f', 0, 64))
+	}
 
 	// Build imu-streamer args
 	imuArgs := []string{"--config", *config, "--duration_s", *durationS}
@@ -52,7 +59,7 @@ func main() {
 
 	// Start sim: stdin is a pipe so we can merge IMU lines with live RC from the app
 	pipeReader, pipeWriter := io.Pipe()
-	cmdSim := exec.Command(*sim)
+	cmdSim := exec.Command(*sim, simArgs...)
 	cmdSim.Stdin = pipeReader
 	cmdSim.Stderr = os.Stderr
 	simOut, err := cmdSim.StdoutPipe()
@@ -110,12 +117,19 @@ func main() {
 	}()
 
 	// Shared latest telemetry (radians from sim; we convert when sending)
+	// With --step-hz, sim outputs "t,roll,pitch,balance,left,right,pos_left,pos_right"
+	const metersPerStep = 3.14159265 * 0.06 / 3200
+	const simToSteps = 100.0 // sim motor_mix limit 10 vs firmware 1000
+
 	var mu sync.Mutex
 	latestRoll := 0.0
 	latestPitch := 0.0
+	latestDist := 0.0
+	latestVel := 0.0
+	latestAccel := 0.0
 	hasTelemetry := false
 
-	// Sim reader: parse "t,roll,pitch,balance,left,right", skip header, convert later when sending
+	// Sim reader: parse "t,roll,pitch,balance,left,right" or with step-hz: "...pos_left,pos_right"
 	go func() {
 		sc := bufio.NewScanner(simOut)
 		for sc.Scan() {
@@ -123,20 +137,35 @@ func main() {
 			if line == "" {
 				continue
 			}
-			// Parse "t,roll,pitch,balance,left,right" (header "t,roll,pitch,..." fails to parse)
 			parts := strings.Split(line, ",")
-			if len(parts) != 6 {
+			if len(parts) < 6 {
 				continue
 			}
 			_, err1 := strconv.ParseFloat(parts[0], 64)
 			roll, err2 := strconv.ParseFloat(parts[1], 64)
 			pitch, err3 := strconv.ParseFloat(parts[2], 64)
-			if err1 != nil || err2 != nil || err3 != nil {
+			left, err4 := strconv.ParseFloat(parts[4], 64)
+			right, err5 := strconv.ParseFloat(parts[5], 64)
+			if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil {
 				continue
 			}
+			dist := 0.0
+			vel := 0.0
+			if len(parts) >= 8 {
+				posL, e1 := strconv.ParseFloat(parts[6], 64)
+				posR, e2 := strconv.ParseFloat(parts[7], 64)
+				if e1 == nil && e2 == nil {
+					dist = 0.5 * (posL + posR) * simToSteps * metersPerStep
+				}
+			}
+			vel = 0.5 * (left + right) * simToSteps * metersPerStep
+
 			mu.Lock()
 			latestRoll = roll
 			latestPitch = pitch
+			latestDist = dist
+			latestVel = vel
+			latestAccel = 0.0 // sim has no accel
 			hasTelemetry = true
 			mu.Unlock()
 		}
@@ -188,10 +217,10 @@ func main() {
 					}
 					var msg string
 					if dis {
-						msg = fmt.Sprintf("R:0 P:%.2f Y:0\n", *armRestPitch)
+						msg = fmt.Sprintf("R:0 P:%.2f Y:0 DIST:0 VEL:0 ACC:0\n", *armRestPitch)
 					} else {
 						mu.Lock()
-						r, p := latestRoll, latestPitch
+						r, p, d, v, a := latestRoll, latestPitch, latestDist, latestVel, latestAccel
 						ok := hasTelemetry
 						mu.Unlock()
 						if !ok {
@@ -199,7 +228,7 @@ func main() {
 						}
 						rollDeg := r * 180 / math.Pi
 						pitchDeg := p * 180 / math.Pi
-						msg = fmt.Sprintf("R:%.2f P:%.2f Y:0\n", rollDeg, pitchDeg)
+						msg = fmt.Sprintf("R:%.2f P:%.2f Y:0 DIST:%.3f VEL:%.2f ACC:%.2f\n", rollDeg, pitchDeg, d, v, a)
 					}
 					if _, err := c.Write([]byte(msg)); err != nil {
 						break

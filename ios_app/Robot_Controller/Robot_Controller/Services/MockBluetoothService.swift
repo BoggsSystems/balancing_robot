@@ -138,7 +138,10 @@ final class MockBluetoothService: NSObject {
             targetPitchDeg: nil,
             mode: nil,
             enabled: true,
-            state: nil
+            state: nil,
+            distanceM: nil,
+            velocityMps: nil,
+            accelFwd: nil
         )
         onTelemetryReceived?(telemetry)
     }
