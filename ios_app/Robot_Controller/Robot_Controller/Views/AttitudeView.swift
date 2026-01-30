@@ -107,6 +107,9 @@ struct AttitudeView: View {
             )
             .padding(.horizontal)
 
+            TelemetryDashboardView(viewModel: viewModel)
+                .padding(.horizontal)
+
             Spacer()
 
             // Control panel

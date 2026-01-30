@@ -5,6 +5,7 @@ import CoreBluetooth
 protocol BluetoothServiceProtocol: AnyObject {
     var state: DeviceState { get }
     var onAttitudeReceived: ((Attitude) -> Void)? { get set }
+    var onTelemetryReceived: ((Telemetry) -> Void)? { get set }
     
     func send(_ command: Command)
     func disconnect()

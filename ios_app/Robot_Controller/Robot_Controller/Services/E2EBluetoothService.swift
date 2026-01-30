@@ -10,6 +10,7 @@ final class E2EBluetoothService {
 
     private(set) var state: DeviceState = .disconnected
     var onAttitudeReceived: ((Attitude) -> Void)?
+    var onTelemetryReceived: ((Telemetry) -> Void)?
 
     // MARK: - Private
 
@@ -107,7 +108,10 @@ final class E2EBluetoothService {
         while let idx = receiveBuffer.firstIndex(of: "\n") {
             let line = String(receiveBuffer[..<idx])
             receiveBuffer = String(receiveBuffer[receiveBuffer.index(after: idx)...])
-            if let att = AttitudeParser.parse(line) {
+            if let telemetry = TelemetryParser.parse(line) {
+                onTelemetryReceived?(telemetry)
+                onAttitudeReceived?(telemetry.attitude)
+            } else if let att = AttitudeParser.parse(line) {
                 onAttitudeReceived?(att)
             }
         }

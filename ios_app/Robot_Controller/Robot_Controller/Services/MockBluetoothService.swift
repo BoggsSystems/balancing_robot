@@ -15,6 +15,7 @@ final class MockBluetoothService: NSObject {
     // MARK: - Callbacks
     
     var onAttitudeReceived: ((Attitude) -> Void)?
+    var onTelemetryReceived: ((Telemetry) -> Void)?
     
     // MARK: - Simulation State
     
@@ -126,5 +127,19 @@ final class MockBluetoothService: NSObject {
         receivedData = String(format: "R:%.1f P:%.1f Y:%.1f", roll, pitch, yaw)
         
         onAttitudeReceived?(attitude)
+        let telemetry = Telemetry(
+            timestamp: time,
+            roll: roll,
+            pitch: pitch,
+            yaw: yaw,
+            left: nil,
+            right: nil,
+            balance: nil,
+            targetPitchDeg: nil,
+            mode: nil,
+            enabled: true,
+            state: nil
+        )
+        onTelemetryReceived?(telemetry)
     }
 }

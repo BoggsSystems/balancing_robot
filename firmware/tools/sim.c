@@ -165,6 +165,10 @@ int main(int argc, char **argv) {
 	int last_enabled = 0;
 	int standup_active = 0;
 	float standup_elapsed = 0.0f;
+	float last_rc_time = 0.0f;
+	int live_rc_updated = 0;
+	const float rc_timeout_s = 1.0f;
+	const float max_tilt_deg = 40.0f;
 
 	attitude_filter_t filter;
 	attitude_init(&filter);
@@ -225,9 +229,9 @@ int main(int argc, char **argv) {
 	}
 
 	if (trace && step_emulate) {
-		puts("t,roll,pitch,balance,left,right,pos_left,pos_right,mode,cmd_throttle,cmd_turn,target_pitch_deg");
+		puts("t,roll,pitch,balance,left,right,pos_left,pos_right,mode,cmd_throttle,cmd_turn,target_pitch_deg,enabled");
 	} else if (trace) {
-		puts("t,roll,pitch,balance,left,right,mode,cmd_throttle,cmd_turn,target_pitch_deg");
+		puts("t,roll,pitch,balance,left,right,mode,cmd_throttle,cmd_turn,target_pitch_deg,enabled");
 	} else if (step_emulate) {
 		puts("t,roll,pitch,balance,left,right,pos_left,pos_right");
 	} else {
@@ -237,6 +241,7 @@ int main(int argc, char **argv) {
 		/* Live RC from e2e-bridge (app M: command) overrides file-based RC */
 		if (parse_rc_live(line, &live_rc)) {
 			use_live_rc = 1;
+			live_rc_updated = 1;
 			continue;
 		}
 
@@ -276,12 +281,26 @@ int main(int argc, char **argv) {
 
 		if (use_live_rc) {
 			rc = live_rc;
+			if (live_rc_updated) {
+				last_rc_time = t;
+				live_rc_updated = 0;
+			}
 		} else if (rc_entries) {
 			while (rc_idx + 1 < rc_count && rc_entries[rc_idx + 1].t <= t) {
 				rc_idx++;
 			}
 			if (rc_count > 0 && rc_entries[rc_idx].t <= t) {
 				rc = rc_entries[rc_idx];
+				last_rc_time = t;
+			}
+		}
+		if (rc.enabled && (t - last_rc_time) > rc_timeout_s) {
+			rc.enabled = 0;
+		}
+		if (rc.enabled) {
+			float pitch_deg = pitch * (180.0f / 3.14159265f);
+			if (fabsf(pitch_deg) > max_tilt_deg) {
+				rc.enabled = 0;
 			}
 		}
 		if (!rc.enabled || rc.mode != last_mode || rc.enabled != last_enabled) {
@@ -437,10 +456,10 @@ int main(int argc, char **argv) {
 			}
 
 			if (trace) {
-				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%.3f,%.3f,%.2f\n",
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%.3f,%.3f,%.2f,%d\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right,
 					   step_pos_left, step_pos_right, rc.mode, cmd_throttle, cmd_turn,
-					   target_pitch_deg);
+					   target_pitch_deg, rc.enabled ? 1 : 0);
 			} else {
 				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right,
@@ -448,9 +467,9 @@ int main(int argc, char **argv) {
 			}
 		} else {
 			if (trace) {
-				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%.3f,%.3f,%.2f\n",
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%.3f,%.3f,%.2f,%d\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right,
-					   rc.mode, cmd_throttle, cmd_turn, target_pitch_deg);
+					   rc.mode, cmd_throttle, cmd_turn, target_pitch_deg, rc.enabled ? 1 : 0);
 			} else {
 				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
 					   t, roll, pitch, balance, cmd.left, cmd.right);

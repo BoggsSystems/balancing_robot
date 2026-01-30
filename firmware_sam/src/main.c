@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "same51.h"
 #include "sercom_spi.h"
@@ -20,6 +21,8 @@
 #define MOTOR_LIMIT     1000.0f  // steps/sec limit
 #define STANDUP_DURATION_S 1.5f
 #define STANDUP_START_PITCH_DEG -25.0f
+#define RC_TIMEOUT_S    1.0f
+#define MAX_TILT_DEG    40.0f
 
 // LED pin on SAME51 Curiosity Nano (directly, typical is PA14)
 #define LED_PIN 14
@@ -39,6 +42,12 @@ extern void delay_ms(uint32_t ms);
 static volatile uint32_t control_ticks = 0;
 static tmc2209_t *g_motor_left = 0;
 static tmc2209_t *g_motor_right = 0;
+
+typedef enum {
+    ROBOT_DISARMED = 0,
+    ROBOT_STANDUP,
+    ROBOT_READY
+} robot_state_t;
 
 void SysTick_Handler(void) {
     if (g_motor_left) {
@@ -154,8 +163,10 @@ int main(void) {
     // Timing
     const float dt = 1.0f / LOOP_HZ;
     uint32_t sample_count = 0;
-    bool standup_active = false;
     float standup_elapsed = 0.0f;
+    robot_state_t state = ROBOT_DISARMED;
+    uint32_t last_rc_tick = 0;
+    const uint32_t rc_timeout_ticks = (uint32_t)(RC_TIMEOUT_S * LOOP_HZ);
 
     uint32_t last_tick = 0;
     while (1) {
@@ -164,7 +175,9 @@ int main(void) {
         }
         last_tick = control_ticks;
         // Poll XBee for RC commands
-        rc_poll(&rc_parser, &rc);
+        if (rc_poll(&rc_parser, &rc)) {
+            last_rc_tick = control_ticks;
+        }
 
         // Handle LED test command (enable toggles LED)
         static int last_enabled = 0;
@@ -173,14 +186,14 @@ int main(void) {
                 led_on();
                 tmc2209_enable(&motor_left, 1);
                 tmc2209_enable(&motor_right, 1);
-                standup_active = true;
+                state = ROBOT_STANDUP;
                 standup_elapsed = 0.0f;
             } else {
                 led_off();
                 tmc2209_enable(&motor_left, 0);
                 tmc2209_enable(&motor_right, 0);
                 motion_script_reset(&script);
-                standup_active = false;
+                state = ROBOT_DISARMED;
             }
             last_enabled = rc.enabled;
         }
@@ -212,15 +225,24 @@ int main(void) {
         roll -= roll_offset;
         pitch -= pitch_offset;
 
+        if (state != ROBOT_DISARMED) {
+            if ((control_ticks - last_rc_tick) > rc_timeout_ticks) {
+                rc.enabled = false;
+            }
+            if (fabsf(rad_to_deg(pitch)) > MAX_TILT_DEG) {
+                rc.enabled = false;
+            }
+        }
+
         // Balance control
         float target_pitch = TARGET_PITCH;
-        if (standup_active) {
+        if (state == ROBOT_STANDUP) {
             float start_rad = STANDUP_START_PITCH_DEG * (3.14159265f / 180.0f);
             float end_rad = TARGET_PITCH;
             float t_norm = standup_elapsed / STANDUP_DURATION_S;
             if (t_norm >= 1.0f) {
                 t_norm = 1.0f;
-                standup_active = false;
+                state = ROBOT_READY;
             }
             target_pitch = start_rad + (end_rad - start_rad) * t_norm;
             standup_elapsed += dt;
@@ -230,7 +252,7 @@ int main(void) {
         float throttle = 0.0f;
         float turn = 0.0f;
         float scripted_target_pitch = TARGET_PITCH;
-        if (rc.enabled && rc.mode != 0 && !standup_active) {
+        if (rc.enabled && rc.mode != 0 && state == ROBOT_READY) {
             float script_throttle = 0.0f;
             float script_turn = 0.0f;
             motion_script_step(&script, rc.mode, dt, &script_throttle, &script_turn, &scripted_target_pitch);
@@ -238,7 +260,7 @@ int main(void) {
             turn = script_turn * 200.0f;
             target_pitch = scripted_target_pitch;
         } else if (rc.enabled) {
-            if (!standup_active) {
+            if (state == ROBOT_READY) {
                 throttle = rc.throttle * 500.0f;
                 turn = rc.turn * 200.0f;
             }
@@ -253,14 +275,29 @@ int main(void) {
 
         // Output telemetry (every 50 samples)
         if ((sample_count++ % 50) == 0) {
+            float time_s = (float)sample_count / (float)LOOP_HZ;
+            float target_pitch_deg = rad_to_deg(target_pitch);
             uart_write_str("R:");
             print_float(rad_to_deg(roll), 1);
             uart_write_str(" P:");
             print_float(rad_to_deg(pitch), 1);
-            uart_write_str(" L:");
+            uart_write_str(" Y:0");
+            uart_write_str(" T:");
+            print_float(time_s, 2);
+            uart_write_str(" LM:");
             print_float(cmd.left, 0);
-            uart_write_str(" R:");
+            uart_write_str(" RM:");
             print_float(cmd.right, 0);
+            uart_write_str(" MODE:");
+            print_int((int32_t)rc.mode);
+            uart_write_str(" EN:");
+            print_int(rc.enabled ? 1 : 0);
+            uart_write_str(" TP:");
+            print_float(target_pitch_deg, 1);
+            uart_write_str(" ST:");
+            print_int((int32_t)state);
+            uart_write_str(" BAL:");
+            print_float(balance, 1);
             uart_write_str("\r\n");
         }
 

@@ -18,6 +18,8 @@ final class AttitudeViewModel {
     private(set) var currentMovement: MovementPattern = .manual
     private(set) var queuedMovement: MovementPattern?
     private(set) var movementStartTime: Date?
+    private(set) var telemetrySamples: [Telemetry] = []
+    private(set) var latestTelemetry: Telemetry?
     
     var isConnected: Bool { bluetoothService.state.isConnected }
     var connectionState: DeviceState { bluetoothService.state }
@@ -40,11 +42,21 @@ final class AttitudeViewModel {
     }
     
     private func setupCallback(_ service: any BluetoothServiceProtocol) {
-        // Subscribe to attitude updates
+        service.onTelemetryReceived = { [weak self] telemetry in
+            DispatchQueue.main.async {
+                self?.latestTelemetry = telemetry
+                self?.attitude = telemetry.attitude
+                self?.lastUpdateTime = Date()
+                self?.appendTelemetry(telemetry)
+            }
+        }
+        // Fallback for older telemetry format
         service.onAttitudeReceived = { [weak self] attitude in
             DispatchQueue.main.async {
-                self?.attitude = attitude
-                self?.lastUpdateTime = Date()
+                if self?.latestTelemetry == nil {
+                    self?.attitude = attitude
+                    self?.lastUpdateTime = Date()
+                }
             }
         }
     }
@@ -65,6 +77,7 @@ final class AttitudeViewModel {
     private var lastDriveSendTime: Date?
     private let driveSendInterval: TimeInterval = 0.05
     private var movementTimer: Timer?
+    private let telemetryLimit = 300
 
     /// Update drive from joystick. Throttled to ~20 Hz; 0,0 is sent immediately.
     func setDriveInput(throttle: Float, turn: Float) {
@@ -133,6 +146,7 @@ final class AttitudeViewModel {
         currentMovement = .manual
         queuedMovement = nil
         bluetoothService.send(.movementMode(MovementPattern.manual.mode))
+        telemetrySamples.removeAll()
     }
     
     /// Reset attitude to zero (for calibration reference)
@@ -183,5 +197,49 @@ final class AttitudeViewModel {
     private func cancelMovementTimer() {
         movementTimer?.invalidate()
         movementTimer = nil
+    }
+
+    private func appendTelemetry(_ telemetry: Telemetry) {
+        telemetrySamples.append(telemetry)
+        if telemetrySamples.count > telemetryLimit {
+            telemetrySamples.removeFirst(telemetrySamples.count - telemetryLimit)
+        }
+    }
+
+    func exportTelemetryCSV() -> URL? {
+        guard !telemetrySamples.isEmpty else { return nil }
+        var lines = ["t,roll,pitch,yaw,left,right,balance,target_pitch,mode,enabled,state"]
+        for sample in telemetrySamples {
+            let t = sample.timestamp.map { String(format: "%.3f", $0) } ?? ""
+            let left = sample.left.map { String(format: "%.2f", $0) } ?? ""
+            let right = sample.right.map { String(format: "%.2f", $0) } ?? ""
+            let bal = sample.balance.map { String(format: "%.2f", $0) } ?? ""
+            let tp = sample.targetPitchDeg.map { String(format: "%.2f", $0) } ?? ""
+            let mode = sample.mode.map(String.init) ?? ""
+            let enabled = sample.enabled.map { $0 ? "1" : "0" } ?? ""
+            let state = sample.state.map(String.init) ?? ""
+            lines.append([
+                t,
+                String(format: "%.2f", sample.roll),
+                String(format: "%.2f", sample.pitch),
+                String(format: "%.2f", sample.yaw),
+                left,
+                right,
+                bal,
+                tp,
+                mode,
+                enabled,
+                state
+            ].joined(separator: ","))
+        }
+
+        let filename = "telemetry_\(Int(Date().timeIntervalSince1970)).csv"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        do {
+            try lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            return nil
+        }
     }
 }

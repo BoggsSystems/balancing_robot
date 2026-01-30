@@ -15,6 +15,7 @@ final class BluetoothService: NSObject {
     // MARK: - Callbacks
     
     var onAttitudeReceived: ((Attitude) -> Void)?
+    var onTelemetryReceived: ((Telemetry) -> Void)?
     
     // MARK: - Private Properties
     
@@ -230,8 +231,10 @@ extension BluetoothService: CBPeripheralDelegate {
             let line = String(receiveBuffer[..<newlineIndex])
             receiveBuffer = String(receiveBuffer[receiveBuffer.index(after: newlineIndex)...])
             
-            // Try to parse as attitude data
-            if let attitude = AttitudeParser.parse(line) {
+            if let telemetry = TelemetryParser.parse(line) {
+                onTelemetryReceived?(telemetry)
+                onAttitudeReceived?(telemetry.attitude)
+            } else if let attitude = AttitudeParser.parse(line) {
                 onAttitudeReceived?(attitude)
             }
             
