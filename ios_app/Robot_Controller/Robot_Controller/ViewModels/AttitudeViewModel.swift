@@ -93,9 +93,28 @@ final class AttitudeViewModel {
         lastDriveSendTime = Date()
     }
 
+    /// Arm/Ready: enable balance and retract arm (if present).
+    func arm() {
+        bluetoothService.send(.arm)
+        cancelMovementTimer()
+        currentMovement = .manual
+        queuedMovement = nil
+        bluetoothService.send(.movementMode(MovementPattern.manual.mode))
+    }
+
+    /// Ready: arm + manual + clear drive (standby).
+    func ready() {
+        arm()
+        sendMotorCommand(throttle: 0, turn: 0)
+    }
+
     /// Disarm (stop balance): send DISARM so firmware runs arm down → wait → disable balance.
     func disarm() {
         bluetoothService.send(.disarm)
+        cancelMovementTimer()
+        currentMovement = .manual
+        queuedMovement = nil
+        bluetoothService.send(.movementMode(MovementPattern.manual.mode))
     }
 
     /// Start IMU streaming (R: P: Y:). Call after connect; separates connection from initiation.

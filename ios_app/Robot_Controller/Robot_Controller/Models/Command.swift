@@ -6,6 +6,8 @@ enum Command {
     case motor(throttle: Float, turn: Float)
     /// Safe shutdown: firmware runs arm down → wait → disable balance.
     case disarm
+    /// Ready/arm: retract arm and enable balance.
+    case arm
     /// Scripted movement mode (0 = manual).
     case movementMode(Int)
 
@@ -18,6 +20,8 @@ enum Command {
             return String(format: "M:%.1f,%.1f\n", throttle, turn)
         case .disarm:
             return "DISARM\n"
+        case .arm:
+            return "ARM\n"
         case .movementMode(let mode):
             return "MODE:\(mode)\n"
         }

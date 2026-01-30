@@ -89,6 +89,33 @@ struct MovementPattern: Identifiable, Equatable {
         icon: "waveform.path"
     )
 
+    static let balanceHoldUp = MovementPattern(
+        id: 9,
+        name: "Balance",
+        subtitle: "Hold +5°",
+        mode: 9,
+        duration: 6.0,
+        icon: "level"
+    )
+
+    static let balanceHoldDown = MovementPattern(
+        id: 10,
+        name: "Balance",
+        subtitle: "Hold -5°",
+        mode: 10,
+        duration: 6.0,
+        icon: "level"
+    )
+
+    static let balanceOscillate = MovementPattern(
+        id: 11,
+        name: "Balance",
+        subtitle: "Slow oscillation",
+        mode: 11,
+        duration: 10.0,
+        icon: "waveform.path.ecg"
+    )
+
     static let all: [MovementPattern] = [
         manual,
         circle,
@@ -98,6 +125,9 @@ struct MovementPattern: Identifiable, Equatable {
         spin,
         stopAndGo,
         square,
-        slalom
+        slalom,
+        balanceHoldUp,
+        balanceHoldDown,
+        balanceOscillate
     ]
 }

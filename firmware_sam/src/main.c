@@ -206,22 +206,25 @@ int main(void) {
         pitch -= pitch_offset;
 
         // Balance control
-        float error = TARGET_PITCH - pitch;
-        float balance = pid_update(&pid, error, dt);
+        float target_pitch = TARGET_PITCH;
 
         // Apply RC mixing
         float throttle = 0.0f;
         float turn = 0.0f;
+        float scripted_target_pitch = TARGET_PITCH;
         if (rc.enabled && rc.mode != 0) {
             float script_throttle = 0.0f;
             float script_turn = 0.0f;
-            motion_script_step(&script, rc.mode, dt, &script_throttle, &script_turn);
+            motion_script_step(&script, rc.mode, dt, &script_throttle, &script_turn, &scripted_target_pitch);
             throttle = script_throttle * 500.0f;
             turn = script_turn * 200.0f;
+            target_pitch = scripted_target_pitch;
         } else if (rc.enabled) {
             throttle = rc.throttle * 500.0f;
             turn = rc.turn * 200.0f;
         }
+        float error = target_pitch - pitch;
+        float balance = pid_update(&pid, error, dt);
         motor_cmd_t cmd = motor_mix(balance, throttle, turn, MOTOR_LIMIT);
 
         // Set motor speeds

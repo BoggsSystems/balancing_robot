@@ -12,8 +12,9 @@ void motion_script_init(motion_script_t *s);
 void motion_script_reset(motion_script_t *s);
 
 // mode: 0 = manual, 1 = circle, 2-4 = figure-8 variants, 5 = spin,
-// 6 = stop-and-go, 7 = square, 8 = slalom (more modes can be added)
+// 6 = stop-and-go, 7 = square, 8 = slalom, 9-11 = balance challenge
 void motion_script_step(motion_script_t *s, uint8_t mode, float dt,
-						float *out_throttle, float *out_turn);
+						float *out_throttle, float *out_turn,
+						float *out_target_pitch_rad);
 
 #endif

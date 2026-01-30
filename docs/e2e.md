@@ -54,6 +54,7 @@ The app sends:
 - **START** – begin sending `R: P: Y:` to this client; clears **disarmed**. No telemetry until START.
 - **STOP** – pause; connection stays open.
 - **DISARM** – set **disarmed**. While disarmed, the bridge sends fixed `R:0 P:<arm-rest-pitch> Y:0` instead of sim roll/pitch (resting-on-arm pose). **START** clears disarmed and resumes sim telemetry.
+- **ARM** – clear **disarmed** and enable motion; sets `RC,...,1,...` for the sim.
 
 The bridge keeps imu-streamer and sim running; it only sends telemetry to a client when that client has sent START. When disarmed, telemetry is overridden to a fixed tilt for safe-shutdown / back-rest-arm E2E.
 
@@ -61,7 +62,7 @@ The bridge keeps imu-streamer and sim running; it only sends telemetry to a clie
 
 The app can send motor commands; when you wire `sendMotorCommand(throttle:turn:)` to a control (e.g. joystick or sliders), it sends `M:throttle,turn` to the bridge. The bridge injects `RC,throttle,turn,1,mode` into the sim before the next IMU line, so the sim uses that for `motor_mix` (throttle and turn) and scripted modes. The sim’s balance PID always runs; RC adds forward/back and left/right.
 
-You can also send scripted movement selections via `MODE:<n>` (0 = manual, 1 = circle, 2-4 = figure-8, 5 = spin, 6 = stop-go, 7 = square, 8 = slalom). The bridge applies the mode with the last throttle/turn.
+You can also send scripted movement selections via `MODE:<n>` (0 = manual, 1 = circle, 2-4 = figure-8, 5 = spin, 6 = stop-go, 7 = square, 8 = slalom, 9-11 = balance challenge). The bridge applies the mode with the last throttle/turn.
 
 ## 5. Optional: run the bridge with custom config
 

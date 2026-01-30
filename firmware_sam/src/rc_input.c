@@ -68,6 +68,20 @@ bool rc_poll(rc_parser_t *p, rc_cmd_t *out) {
             }
             p->buf[p->idx] = '\0';
             p->idx = 0;
+            if (strcmp(p->buf, "ARM") == 0) {
+                p->last.enabled = true;
+                if (out) {
+                    *out = p->last;
+                }
+                return true;
+            }
+            if (strcmp(p->buf, "DISARM") == 0) {
+                p->last.enabled = false;
+                if (out) {
+                    *out = p->last;
+                }
+                return true;
+            }
             if (strncmp(p->buf, "MODE:", 5) == 0) {
                 int mode = (int)strtol(p->buf + 5, NULL, 10);
                 if (mode < 0) {

@@ -68,15 +68,17 @@ func main() {
 		_ = cmdSim.Wait()
 	}()
 
-	// Pending RC: app sends M:throttle,turn or MODE:n; we inject "RC,throttle,turn,1,mode"
+	// Pending RC: app sends M:throttle,turn or MODE:n; we inject "RC,throttle,turn,enabled,mode"
 	var pendingRCMu sync.Mutex
 	var pendingRC bool
 	var pendingThrottle float64
 	var pendingTurn float64
 	var pendingMode int
+	var pendingEnabled int
 	var lastThrottle float64
 	var lastTurn float64
 	var lastMode int
+	var lastEnabled int
 
 	// Merge goroutine: read imu-streamer, inject any pending RC before each IMU line, write to sim stdin
 	go func() {
@@ -88,10 +90,11 @@ func main() {
 			th := pendingThrottle
 			tr := pendingTurn
 			md := pendingMode
+			en := pendingEnabled
 			pendingRC = false
 			pendingRCMu.Unlock()
 			if pend {
-				rcLine := fmt.Sprintf("RC,%g,%g,1,%d\n", th, tr, md)
+				rcLine := fmt.Sprintf("RC,%g,%g,%d,%d\n", th, tr, en, md)
 				if _, err := pipeWriter.Write([]byte(rcLine)); err != nil {
 					return
 				}
@@ -226,6 +229,26 @@ func main() {
 						st.mu.Lock()
 						st.disarmed = true
 						st.mu.Unlock()
+						pendingRCMu.Lock()
+						lastEnabled = 0
+						pendingThrottle = lastThrottle
+						pendingTurn = lastTurn
+						pendingMode = lastMode
+						pendingEnabled = 0
+						pendingRC = true
+						pendingRCMu.Unlock()
+					case "ARM":
+						st.mu.Lock()
+						st.disarmed = false
+						st.mu.Unlock()
+						pendingRCMu.Lock()
+						lastEnabled = 1
+						pendingThrottle = lastThrottle
+						pendingTurn = lastTurn
+						pendingMode = lastMode
+						pendingEnabled = 1
+						pendingRC = true
+						pendingRCMu.Unlock()
 					default:
 						if strings.HasPrefix(line, "M:") {
 							parts := strings.SplitN(strings.TrimPrefix(line, "M:"), ",", 2)
@@ -238,6 +261,7 @@ func main() {
 										pendingThrottle = throttle
 										pendingTurn = turn
 										pendingMode = lastMode
+										pendingEnabled = lastEnabled
 										pendingRC = true
 										pendingRCMu.Unlock()
 									}
@@ -254,6 +278,7 @@ func main() {
 								pendingThrottle = lastThrottle
 								pendingTurn = lastTurn
 								pendingMode = mode
+								pendingEnabled = lastEnabled
 								pendingRC = true
 								pendingRCMu.Unlock()
 							}

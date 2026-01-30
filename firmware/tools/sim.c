@@ -289,6 +289,7 @@ int main(int argc, char **argv) {
 		}
 		float cmd_throttle = (rc.enabled) ? rc.throttle : 0.0f;
 		float cmd_turn = (rc.enabled) ? rc.turn : 0.0f;
+		float target_pitch = 0.0f;
 		if (rc.enabled && rc.mode != 0) {
 			if (rc.mode == 1) {
 				cmd_throttle = 0.3f;
@@ -355,10 +356,28 @@ int main(int argc, char **argv) {
 				float phase = (2.0f * PI * script_time) / period_s;
 				cmd_throttle = 0.3f;
 				cmd_turn = 0.40f * sinf(phase);
+			} else if (rc.mode == 9) {
+				const float DEG2RAD = 3.14159265f / 180.0f;
+				cmd_throttle = 0.0f;
+				cmd_turn = 0.0f;
+				target_pitch = 5.0f * DEG2RAD;
+			} else if (rc.mode == 10) {
+				const float DEG2RAD = 3.14159265f / 180.0f;
+				cmd_throttle = 0.0f;
+				cmd_turn = 0.0f;
+				target_pitch = -5.0f * DEG2RAD;
+			} else if (rc.mode == 11) {
+				const float PI = 3.14159265f;
+				const float DEG2RAD = 3.14159265f / 180.0f;
+				const float period_s = 10.0f;
+				float phase = (2.0f * PI * script_time) / period_s;
+				cmd_throttle = 0.0f;
+				cmd_turn = 0.0f;
+				target_pitch = (3.0f * DEG2RAD) * sinf(phase);
 			}
 			script_time += control_dt;
 		}
-		float balance = pid_update(&pid, 0.0f - pitch, control_dt);
+		float balance = pid_update(&pid, target_pitch - pitch, control_dt);
 		motor_cmd_t cmd = motor_mix(balance, cmd_throttle, cmd_turn, 10.0f);
 
 		if (step_emulate) {

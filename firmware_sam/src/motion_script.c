@@ -11,11 +11,13 @@ void motion_script_reset(motion_script_t *s) {
 }
 
 void motion_script_step(motion_script_t *s, uint8_t mode, float dt,
-						float *out_throttle, float *out_turn) {
+						float *out_throttle, float *out_turn,
+						float *out_target_pitch_rad) {
 	if (mode != s->last_mode) {
 		motion_script_reset(s);
 		s->last_mode = mode;
 	}
+	*out_target_pitch_rad = 0.0f;
 
 	if (mode == 1) {
 		// Circle: constant forward + constant turn.
@@ -92,6 +94,18 @@ void motion_script_step(motion_script_t *s, uint8_t mode, float dt,
 		float phase = (2.0f * PI * s->t) / period_s;
 		*out_throttle = 0.3f;
 		*out_turn = 0.40f * sinf(phase);
+	} else if (mode == 9) {
+		// Balance challenge: hold +5 degrees.
+		*out_target_pitch_rad = 5.0f * (3.14159265f / 180.0f);
+	} else if (mode == 10) {
+		// Balance challenge: hold -5 degrees.
+		*out_target_pitch_rad = -5.0f * (3.14159265f / 180.0f);
+	} else if (mode == 11) {
+		// Balance challenge: slow oscillation +/-3 degrees.
+		const float PI = 3.14159265f;
+		const float period_s = 10.0f;
+		float phase = (2.0f * PI * s->t) / period_s;
+		*out_target_pitch_rad = (3.0f * (3.14159265f / 180.0f)) * sinf(phase);
 	} else {
 		*out_throttle = 0.0f;
 		*out_turn = 0.0f;

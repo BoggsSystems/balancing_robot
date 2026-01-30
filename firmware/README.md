@@ -74,7 +74,7 @@ go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --r
 
 If you include a 5th column, `mode`, the simulator will run the scripted
 motions (1=circle, 2-4=figure-8 variants, 5=spin, 6=stop-go,
-7=square, 8=slalom). Example:
+7=square, 8=slalom, 9-11=balance challenge). Example:
 
 ```
 t,throttle,turn,enable,mode

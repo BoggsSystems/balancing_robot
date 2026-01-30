@@ -58,7 +58,7 @@ struct AttitudeView: View {
             }
             .padding(.horizontal)
 
-            // Drive: E-Stop, Disarm, Joystick (enabled when streaming)
+            // Drive: E-Stop, Ready, Arm, Disarm, Joystick (enabled when streaming)
             VStack(spacing: 16) {
                 HStack(spacing: 12) {
                     Button("E-STOP") {
@@ -66,6 +66,18 @@ struct AttitudeView: View {
                         joystickResetId = UUID()
                     }
                     .buttonStyle(PrimaryButtonStyle(isDestructive: true))
+                    .disabled(!viewModel.isConnected)
+
+                    Button("Ready") {
+                        viewModel.ready()
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(!viewModel.isConnected)
+
+                    Button("Arm") {
+                        viewModel.arm()
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
                     .disabled(!viewModel.isConnected)
 
                     Button("Disarm") {
