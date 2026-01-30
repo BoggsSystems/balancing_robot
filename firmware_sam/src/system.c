@@ -13,6 +13,16 @@ void system_init(void) {
     GCLK->PCHCTRL[GCLK_SERCOM1_CORE] = (1 << 6) | 0; // Enable, GCLK0
 }
 
+void system_systick_init(uint32_t tick_hz) {
+    if (tick_hz == 0) {
+        return;
+    }
+    uint32_t reload = (CPU_HZ / tick_hz) - 1;
+    SYSTICK->LOAD = reload;
+    SYSTICK->VAL = 0;
+    SYSTICK->CTRL = SYSTICK_CTRL_CLKSOURCE | SYSTICK_CTRL_TICKINT | SYSTICK_CTRL_ENABLE;
+}
+
 void delay_ms(uint32_t ms) {
     // Simple busy-wait delay (assumes ~48 MHz, rough estimate)
     for (volatile uint32_t i = 0; i < ms * 6000; i++) {

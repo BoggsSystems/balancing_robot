@@ -12,6 +12,7 @@ void tmc2209_init(tmc2209_t *m, uint8_t step_pin, uint8_t dir_pin, uint8_t en_pi
     m->en_pin = en_pin;
     m->position = 0;
     m->target_speed = 0;
+    m->step_accumulator = 0;
 
     // Configure pins as outputs
     PORTA->DIRSET = (1 << step_pin) | (1 << dir_pin) | (1 << en_pin);
@@ -63,9 +64,6 @@ void tmc2209_step(tmc2209_t *m) {
 }
 
 // Simple velocity-based stepping
-// Call this from a timer at tick_hz (e.g., 10000 Hz)
-static int32_t step_accumulator[2] = {0, 0};
-
 void tmc2209_tick(tmc2209_t *m, uint32_t tick_hz) {
     if (m->target_speed == 0) {
         return;
@@ -78,10 +76,9 @@ void tmc2209_tick(tmc2209_t *m, uint32_t tick_hz) {
 
     // Accumulator-based step generation
     // step_accumulator += |speed|; if >= tick_hz, step and subtract tick_hz
-    int idx = (m == (tmc2209_t *)0) ? 0 : 1; // crude index
-    step_accumulator[idx] += speed;
-    if ((uint32_t)step_accumulator[idx] >= tick_hz) {
-        step_accumulator[idx] -= tick_hz;
+    m->step_accumulator += speed;
+    if ((uint32_t)m->step_accumulator >= tick_hz) {
+        m->step_accumulator -= tick_hz;
         tmc2209_step(m);
     }
 }

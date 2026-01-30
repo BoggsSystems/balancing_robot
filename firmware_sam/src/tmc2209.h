@@ -9,6 +9,7 @@ typedef struct {
     uint8_t en_pin;
     int32_t position;
     int32_t target_speed;  // steps per second (signed for direction)
+    int32_t step_accumulator;
 } tmc2209_t;
 
 void tmc2209_init(tmc2209_t *m, uint8_t step_pin, uint8_t dir_pin, uint8_t en_pin);

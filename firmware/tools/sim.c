@@ -129,8 +129,16 @@ static rc_entry_t *load_rc_profile(const char *path, size_t *out_count) {
 
 int main(int argc, char **argv) {
 	char line[256];
-	float last_t = 0.0f;
-	const float default_dt = 1.0f / 500.0f;
+	float control_hz = 400.0f;
+	float control_dt = 1.0f / 400.0f;
+	float next_control_t = 0.0f;
+	int control_started = 0;
+	float step_hz = 0.0f;
+	int step_emulate = 0;
+	int32_t step_pos_left = 0;
+	int32_t step_pos_right = 0;
+	float step_acc_left = 0.0f;
+	float step_acc_right = 0.0f;
 
 	attitude_filter_t filter;
 	attitude_init(&filter);
@@ -146,6 +154,21 @@ int main(int argc, char **argv) {
 	for (int i = 1; i < argc - 1; i++) {
 		if (strcmp(argv[i], "--rc") == 0) {
 			rc_path = argv[i + 1];
+			continue;
+		}
+		if (strcmp(argv[i], "--control-hz") == 0) {
+			control_hz = strtof(argv[i + 1], NULL);
+			if (control_hz <= 0.0f) {
+				control_hz = 400.0f;
+			}
+			control_dt = 1.0f / control_hz;
+			continue;
+		}
+		if (strcmp(argv[i], "--step-hz") == 0) {
+			step_hz = strtof(argv[i + 1], NULL);
+			if (step_hz > 0.0f) {
+				step_emulate = 1;
+			}
 		}
 	}
 	size_t rc_count = 0;
@@ -158,7 +181,11 @@ int main(int argc, char **argv) {
 		rc_entries = load_rc_profile(rc_path, &rc_count);
 	}
 
-	puts("t,roll,pitch,balance,left,right");
+	if (step_emulate) {
+		puts("t,roll,pitch,balance,left,right,pos_left,pos_right");
+	} else {
+		puts("t,roll,pitch,balance,left,right");
+	}
 	while (fgets(line, sizeof(line), stdin)) {
 		/* Live RC from e2e-bridge (app M: command) overrides file-based RC */
 		if (parse_rc_live(line, &live_rc)) {
@@ -170,8 +197,6 @@ int main(int argc, char **argv) {
 		if (!parse_line(line, &t, &gx, &gy, &gz, &ax, &ay, &az)) {
 			continue;
 		}
-		float dt = (last_t > 0.0f) ? (t - last_t) : default_dt;
-		last_t = t;
 
 		if (calib_count < calib_samples) {
 			float roll_acc = 0.0f;
@@ -187,9 +212,18 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
+		if (!control_started) {
+			next_control_t = t;
+			control_started = 1;
+		}
+		if (t + 1e-6f < next_control_t) {
+			continue;
+		}
+		next_control_t += control_dt;
+
 		float roll = 0.0f;
 		float pitch = 0.0f;
-		attitude_update(&filter, gx, gy, gz, ax, ay, az, dt, &roll, &pitch);
+		attitude_update(&filter, gx, gy, gz, ax, ay, az, control_dt, &roll, &pitch);
 		roll -= roll_offset;
 		pitch -= pitch_offset;
 
@@ -203,13 +237,44 @@ int main(int argc, char **argv) {
 				rc = rc_entries[rc_idx];
 			}
 		}
-		float balance = pid_update(&pid, 0.0f - pitch, dt);
+		float balance = pid_update(&pid, 0.0f - pitch, control_dt);
 		float throttle = (rc.enabled) ? rc.throttle : 0.0f;
 		float turn = (rc.enabled) ? rc.turn : 0.0f;
 		motor_cmd_t cmd = motor_mix(balance, throttle, turn, 10.0f);
 
-		printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
-			   t, roll, pitch, balance, cmd.left, cmd.right);
+		if (step_emulate) {
+			float speed_left = (cmd.left < 0.0f) ? -cmd.left : cmd.left;
+			float speed_right = (cmd.right < 0.0f) ? -cmd.right : cmd.right;
+			float ticks_f = step_hz * control_dt;
+			int32_t ticks = (int32_t)(ticks_f + 0.5f);
+			step_acc_left += speed_left * ticks;
+			step_acc_right += speed_right * ticks;
+			int32_t steps_left = 0;
+			int32_t steps_right = 0;
+			if (step_hz > 0.0f) {
+				steps_left = (int32_t)(step_acc_left / step_hz);
+				steps_right = (int32_t)(step_acc_right / step_hz);
+				step_acc_left -= steps_left * step_hz;
+				step_acc_right -= steps_right * step_hz;
+			}
+			if (cmd.left >= 0.0f) {
+				step_pos_left += steps_left;
+			} else {
+				step_pos_left -= steps_left;
+			}
+			if (cmd.right >= 0.0f) {
+				step_pos_right += steps_right;
+			} else {
+				step_pos_right -= steps_right;
+			}
+
+			printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d\n",
+				   t, roll, pitch, balance, cmd.left, cmd.right,
+				   step_pos_left, step_pos_right);
+		} else {
+			printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+				   t, roll, pitch, balance, cmd.left, cmd.right);
+		}
 	}
 	free(rc_entries);
 	return 0;

@@ -13,6 +13,7 @@
 // Configuration
 #define UART_BAUD       115200
 #define LOOP_HZ         400
+#define SYSTICK_HZ      10000
 #define CALIB_SAMPLES   200
 #define TARGET_PITCH    0.0f
 #define MOTOR_LIMIT     1000.0f  // steps/sec limit
@@ -29,7 +30,28 @@
 #define RIGHT_EN_PIN    13
 
 extern void system_init(void);
+extern void system_systick_init(uint32_t tick_hz);
 extern void delay_ms(uint32_t ms);
+
+static volatile uint32_t control_ticks = 0;
+static tmc2209_t *g_motor_left = 0;
+static tmc2209_t *g_motor_right = 0;
+
+void SysTick_Handler(void) {
+    if (g_motor_left) {
+        tmc2209_tick(g_motor_left, SYSTICK_HZ);
+    }
+    if (g_motor_right) {
+        tmc2209_tick(g_motor_right, SYSTICK_HZ);
+    }
+
+    static uint32_t div = 0;
+    div++;
+    if (div >= (SYSTICK_HZ / LOOP_HZ)) {
+        div = 0;
+        control_ticks++;
+    }
+}
 
 static void print_int(int32_t val) {
     char buf[12];
@@ -83,10 +105,17 @@ static float rad_to_deg(float rad) {
 
 int main(void) {
     system_init();
+    system_systick_init(SYSTICK_HZ);
     led_init();
     uart_init(UART_BAUD);
     spi_init();
-    bmi088_init();
+    if (!bmi088_init()) {
+        uart_write_str("BMI088 init failed\r\n");
+        while (1) {
+            led_toggle();
+            delay_ms(200);
+        }
+    }
 
     uart_write_str("SAME51 Balancing Robot Ready\r\n");
 
@@ -94,6 +123,8 @@ int main(void) {
     tmc2209_t motor_left, motor_right;
     tmc2209_init(&motor_left, LEFT_STEP_PIN, LEFT_DIR_PIN, LEFT_EN_PIN);
     tmc2209_init(&motor_right, RIGHT_STEP_PIN, RIGHT_DIR_PIN, RIGHT_EN_PIN);
+    g_motor_left = &motor_left;
+    g_motor_right = &motor_right;
 
     // Initialize filter and controller
     attitude_filter_t filter;
@@ -118,7 +149,12 @@ int main(void) {
     const float dt = 1.0f / LOOP_HZ;
     uint32_t sample_count = 0;
 
+    uint32_t last_tick = 0;
     while (1) {
+        if (control_ticks == last_tick) {
+            continue;
+        }
+        last_tick = control_ticks;
         // Poll XBee for RC commands
         rc_poll(&rc_parser, &rc);
 
@@ -154,7 +190,6 @@ int main(void) {
                 pitch_offset /= (float)CALIB_SAMPLES;
                 uart_write_str("Calibration done\r\n");
             }
-            delay_ms(1000 / LOOP_HZ);
             continue;
         }
 
@@ -191,8 +226,6 @@ int main(void) {
             uart_write_str("\r\n");
         }
 
-        // Loop timing (simple delay - could use timer)
-        delay_ms(1000 / LOOP_HZ);
     }
 
     return 0;

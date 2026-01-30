@@ -71,3 +71,22 @@ Run the sim with:
 ```bash
 go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --rc rc_profile.csv > out_angles.csv
 ```
+
+### Fixed-rate control loop (heartbeat)
+
+To mirror the firmware's fixed-rate control loop, run the simulator with a
+fixed control cadence:
+
+```bash
+go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --control-hz 400 > out_angles.csv
+```
+
+### Step pulse emulator
+
+To emulate step pulse generation at a fixed tick rate, add `--step-hz`.
+This produces `pos_left` and `pos_right` columns with the cumulative
+step count per motor:
+
+```bash
+go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --control-hz 400 --step-hz 10000 > out_angles.csv
+```

@@ -10,6 +10,7 @@
 #define GCLK_BASE    0x40001C00UL
 #define MCLK_BASE    0x40000800UL
 #define NVMCTRL_BASE 0x41004000UL
+#define CPU_HZ       48000000UL
 
 // PORT registers (Group A = 0, Group B = 1)
 typedef struct {
@@ -146,5 +147,19 @@ typedef struct {
 
 // Cortex-M4 NVIC
 #define NVIC_ISER ((volatile uint32_t *)0xE000E100UL)
+
+// Cortex-M4 SysTick
+typedef struct {
+	volatile uint32_t CTRL;
+	volatile uint32_t LOAD;
+	volatile uint32_t VAL;
+	volatile uint32_t CALIB;
+} SysTick_Type;
+
+#define SYSTICK ((SysTick_Type *)0xE000E010UL)
+
+#define SYSTICK_CTRL_ENABLE    (1 << 0)
+#define SYSTICK_CTRL_TICKINT   (1 << 1)
+#define SYSTICK_CTRL_CLKSOURCE (1 << 2)
 
 #endif

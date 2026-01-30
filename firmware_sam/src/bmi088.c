@@ -71,7 +71,7 @@ static void gyro_write_reg(uint8_t reg, uint8_t val) {
     cs_gyro_high();
 }
 
-void bmi088_init(void) {
+bool bmi088_init(void) {
     // Configure CS pins as outputs, initially high
     PORTA->DIRSET = (1 << ACCEL_CS_PIN) | (1 << GYRO_CS_PIN);
     cs_accel_high();
@@ -87,6 +87,15 @@ void bmi088_init(void) {
     uint8_t dummy;
     accel_read_regs(BMI088_ACC_CHIP_ID, &dummy, 1);
     delay_ms(1);
+
+    // Read and verify chip IDs
+    uint8_t acc_id = 0;
+    uint8_t gyr_id = 0;
+    accel_read_regs(BMI088_ACC_CHIP_ID, &acc_id, 1);
+    gyro_read_regs(BMI088_GYR_CHIP_ID, &gyr_id, 1);
+    if (acc_id != BMI088_ACC_CHIP_ID_VAL || gyr_id != BMI088_GYR_CHIP_ID_VAL) {
+        return false;
+    }
 
     // Power on accelerometer
     accel_write_reg(BMI088_ACC_PWR_CONF, 0x00); // active mode
@@ -108,6 +117,7 @@ void bmi088_init(void) {
     // Bandwidth: ODR=400Hz, filter=47Hz
     gyro_write_reg(BMI088_GYR_BANDWIDTH, 0x03);
     delay_ms(10);
+    return true;
 }
 
 void bmi088_read_raw(bmi088_sample_t *out) {

@@ -2,6 +2,7 @@
 #define BMI088_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct {
     int16_t ax, ay, az;
@@ -13,7 +14,7 @@ typedef struct {
     float gx, gy, gz;
 } bmi088_scaled_t;
 
-void bmi088_init(void);
+bool bmi088_init(void);
 void bmi088_read_raw(bmi088_sample_t *out);
 void bmi088_read_scaled(bmi088_scaled_t *out);
 

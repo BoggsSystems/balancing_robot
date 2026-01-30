@@ -13,6 +13,16 @@ static float clamp(float v, float limit) {
     return v;
 }
 
+static float clamp_range(float v, float min_v, float max_v) {
+    if (v < min_v) {
+        return min_v;
+    }
+    if (v > max_v) {
+        return max_v;
+    }
+    return v;
+}
+
 void pid_init(pid_ctrl_t *p, float kp, float ki, float kd, float output_limit) {
     p->kp = kp;
     p->ki = ki;
@@ -27,6 +37,10 @@ float pid_update(pid_ctrl_t *p, float error, float dt) {
         return 0.0f;
     }
     p->integral += error * dt;
+    if (p->ki > 0.0f && p->output_limit > 0.0f) {
+        float integral_limit = p->output_limit / p->ki;
+        p->integral = clamp_range(p->integral, -integral_limit, integral_limit);
+    }
     float derivative = (error - p->prev_error) / dt;
     p->prev_error = error;
 
