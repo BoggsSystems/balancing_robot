@@ -39,13 +39,15 @@ This provides `arm-none-eabi-gcc`, `arm-none-eabi-objcopy`, `arm-none-eabi-size`
 
 ## Build
 
+Run `make` in this directory. That produces `build/balancing_robot.elf` and `build/balancing_robot.bin`. **Do this first**; the `.bin` is what you program into the MCU.
+
 ```bash
 make
 ```
 
 ## Flash (download to the MCU)
 
-We **build** from the command line (`make`); we **do not use an IDE to compile**. To program the SAME51, load `build/balancing_robot.bin` (or `.elf`) with one of these:
+After **building** (above), the file `build/balancing_robot.bin` exists. We **do not use an IDE to compile**; we use `make`. To program the SAME51, load that `.bin` with one of these:
 
 ### Recommended: Microchip MPLAB IPE
 
@@ -53,11 +55,11 @@ We **build** from the command line (`make`); we **do not use an IDE to compile**
 
 1. Download and install from [Microchip MPLAB IPE](https://www.microchip.com/en-us/tools-resources/develop/mplab-integrated-programming-environment).
 2. Connect the **SAME51 Curiosity Nano** via USB (onboard **EDBG** debugger).
-3. In IPE: choose device **ATSAME51J20A**, select `build/balancing_robot.bin`, then **Program**.
+3. In IPE: choose device **ATSAME51J20A**, then select the **file** `build/balancing_robot.bin` (the firmware `make` produced) and click **Program**.
 
 ### Alternative: MPLAB X IDE
 
-**MPLAB X IDE** is a full IDE. You can use it only to flash: create a simple project or use “Make and Program,” or build with `make` and use MPLAB X’s programming tool to load `build/balancing_robot.bin`. The Curiosity Nano’s EDBG is supported directly.
+**MPLAB X IDE** is a full IDE. You can use it only to flash: run `make` first so `build/balancing_robot.bin` exists, then use MPLAB X’s programming tool to load that file. The Curiosity Nano’s EDBG is supported directly.
 
 ### Optional: OpenOCD (command line)
 
