@@ -8,6 +8,7 @@
 #include "attitude.h"
 #include "control.h"
 #include "rc_input.h"
+#include "motion_script.h"
 #include "tmc2209.h"
 
 // Configuration
@@ -138,6 +139,9 @@ int main(void) {
     rc_init(&rc_parser);
     rc_cmd_t rc = {0};
 
+    motion_script_t script;
+    motion_script_init(&script);
+
     // Calibration
     float roll_offset = 0.0f;
     float pitch_offset = 0.0f;
@@ -169,6 +173,7 @@ int main(void) {
                 led_off();
                 tmc2209_enable(&motor_left, 0);
                 tmc2209_enable(&motor_right, 0);
+                motion_script_reset(&script);
             }
             last_enabled = rc.enabled;
         }
@@ -205,8 +210,18 @@ int main(void) {
         float balance = pid_update(&pid, error, dt);
 
         // Apply RC mixing
-        float throttle = rc.enabled ? (rc.throttle * 500.0f) : 0.0f;
-        float turn = rc.enabled ? (rc.turn * 200.0f) : 0.0f;
+        float throttle = 0.0f;
+        float turn = 0.0f;
+        if (rc.enabled && rc.mode != 0) {
+            float script_throttle = 0.0f;
+            float script_turn = 0.0f;
+            motion_script_step(&script, rc.mode, dt, &script_throttle, &script_turn);
+            throttle = script_throttle * 500.0f;
+            turn = script_turn * 200.0f;
+        } else if (rc.enabled) {
+            throttle = rc.throttle * 500.0f;
+            turn = rc.turn * 200.0f;
+        }
         motor_cmd_t cmd = motor_mix(balance, throttle, turn, MOTOR_LIMIT);
 
         // Set motor speeds

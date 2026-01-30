@@ -72,6 +72,18 @@ Run the sim with:
 go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --rc rc_profile.csv > out_angles.csv
 ```
 
+If you include a 5th column, `mode`, the simulator will run the scripted
+motions (1=circle, 2-4=figure-8 variants). Example:
+
+```
+t,throttle,turn,enable,mode
+0.0,0.0,0.0,1,1
+2.0,0.0,0.0,1,2
+6.0,0.0,0.0,1,3
+12.0,0.0,0.0,1,4
+18.0,0.0,0.0,0,0
+```
+
 ### Fixed-rate control loop (heartbeat)
 
 To mirror the firmware's fixed-rate control loop, run the simulator with a
@@ -89,4 +101,13 @@ step count per motor:
 
 ```bash
 go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --control-hz 400 --step-hz 10000 > out_angles.csv
+```
+
+### Trace scripted commands
+
+Add `--trace` to include the selected mode and the effective command
+throttle/turn in the output columns:
+
+```bash
+go run ./cmd/imu-streamer --config configs/default.yaml | firmware/tools/sim --rc rc_profile_scripted.csv --control-hz 400 --step-hz 10000 --trace > out_angles.csv
 ```

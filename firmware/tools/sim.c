@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "../src/attitude.h"
 #include "../src/control.h"
@@ -41,6 +42,7 @@ typedef struct {
 	float throttle;
 	float turn;
 	int enabled;
+	int mode;
 } rc_entry_t;
 
 static int parse_rc_line(const char *line, rc_entry_t *out) {
@@ -53,19 +55,28 @@ static int parse_rc_line(const char *line, rc_entry_t *out) {
 
 	char *save = NULL;
 	char *tok = strtok_r(tmp, ",", &save);
-	float vals[4];
+	float vals[5];
 	int count = 0;
-	while (tok && count < 4) {
+	while (tok && count < 5) {
 		vals[count++] = strtof(tok, NULL);
 		tok = strtok_r(NULL, ",", &save);
 	}
-	if (count != 4) {
+	if (count < 4) {
 		return 0;
 	}
 	out->t = vals[0];
 	out->throttle = vals[1];
 	out->turn = vals[2];
 	out->enabled = (vals[3] != 0.0f);
+	if (count >= 5) {
+		int mode = (int)vals[4];
+		if (mode < 0) {
+			mode = 0;
+		}
+		out->mode = mode;
+	} else {
+		out->mode = 0;
+	}
 	return 1;
 }
 
@@ -139,6 +150,10 @@ int main(int argc, char **argv) {
 	int32_t step_pos_right = 0;
 	float step_acc_left = 0.0f;
 	float step_acc_right = 0.0f;
+	int trace = 0;
+	float script_time = 0.0f;
+	int last_mode = 0;
+	int last_enabled = 0;
 
 	attitude_filter_t filter;
 	attitude_init(&filter);
@@ -151,24 +166,41 @@ int main(int argc, char **argv) {
 	const unsigned int calib_samples = 200;
 
 	const char *rc_path = NULL;
-	for (int i = 1; i < argc - 1; i++) {
+	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--rc") == 0) {
+			if (i + 1 >= argc) {
+				continue;
+			}
 			rc_path = argv[i + 1];
+			i++;
 			continue;
 		}
 		if (strcmp(argv[i], "--control-hz") == 0) {
+			if (i + 1 >= argc) {
+				continue;
+			}
 			control_hz = strtof(argv[i + 1], NULL);
 			if (control_hz <= 0.0f) {
 				control_hz = 400.0f;
 			}
 			control_dt = 1.0f / control_hz;
+			i++;
 			continue;
 		}
 		if (strcmp(argv[i], "--step-hz") == 0) {
+			if (i + 1 >= argc) {
+				continue;
+			}
 			step_hz = strtof(argv[i + 1], NULL);
 			if (step_hz > 0.0f) {
 				step_emulate = 1;
 			}
+			i++;
+			continue;
+		}
+		if (strcmp(argv[i], "--trace") == 0) {
+			trace = 1;
+			continue;
 		}
 	}
 	size_t rc_count = 0;
@@ -181,7 +213,11 @@ int main(int argc, char **argv) {
 		rc_entries = load_rc_profile(rc_path, &rc_count);
 	}
 
-	if (step_emulate) {
+	if (trace && step_emulate) {
+		puts("t,roll,pitch,balance,left,right,pos_left,pos_right,mode,cmd_throttle,cmd_turn");
+	} else if (trace) {
+		puts("t,roll,pitch,balance,left,right,mode,cmd_throttle,cmd_turn");
+	} else if (step_emulate) {
 		puts("t,roll,pitch,balance,left,right,pos_left,pos_right");
 	} else {
 		puts("t,roll,pitch,balance,left,right");
@@ -237,10 +273,36 @@ int main(int argc, char **argv) {
 				rc = rc_entries[rc_idx];
 			}
 		}
+		if (!rc.enabled || rc.mode != last_mode || rc.enabled != last_enabled) {
+			script_time = 0.0f;
+			last_mode = rc.mode;
+			last_enabled = rc.enabled;
+		}
+		float cmd_throttle = (rc.enabled) ? rc.throttle : 0.0f;
+		float cmd_turn = (rc.enabled) ? rc.turn : 0.0f;
+		if (rc.enabled && rc.mode != 0) {
+			if (rc.mode == 1) {
+				cmd_throttle = 0.3f;
+				cmd_turn = 0.2f;
+			} else if (rc.mode >= 2 && rc.mode <= 4) {
+				const float PI = 3.14159265f;
+				float period_s = 4.0f;
+				float turn_amp = 0.25f;
+				if (rc.mode == 3) {
+					period_s = 6.0f;
+					turn_amp = 0.20f;
+				} else if (rc.mode == 4) {
+					period_s = 3.0f;
+					turn_amp = 0.30f;
+				}
+				float phase = (2.0f * PI * script_time) / period_s;
+				cmd_throttle = 0.3f;
+				cmd_turn = turn_amp * sinf(phase);
+			}
+			script_time += control_dt;
+		}
 		float balance = pid_update(&pid, 0.0f - pitch, control_dt);
-		float throttle = (rc.enabled) ? rc.throttle : 0.0f;
-		float turn = (rc.enabled) ? rc.turn : 0.0f;
-		motor_cmd_t cmd = motor_mix(balance, throttle, turn, 10.0f);
+		motor_cmd_t cmd = motor_mix(balance, cmd_throttle, cmd_turn, 10.0f);
 
 		if (step_emulate) {
 			float speed_left = (cmd.left < 0.0f) ? -cmd.left : cmd.left;
@@ -268,12 +330,24 @@ int main(int argc, char **argv) {
 				step_pos_right -= steps_right;
 			}
 
-			printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d\n",
-				   t, roll, pitch, balance, cmd.left, cmd.right,
-				   step_pos_left, step_pos_right);
+			if (trace) {
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d,%d,%.3f,%.3f\n",
+					   t, roll, pitch, balance, cmd.left, cmd.right,
+					   step_pos_left, step_pos_right, rc.mode, cmd_throttle, cmd_turn);
+			} else {
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%d\n",
+					   t, roll, pitch, balance, cmd.left, cmd.right,
+					   step_pos_left, step_pos_right);
+			}
 		} else {
-			printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
-				   t, roll, pitch, balance, cmd.left, cmd.right);
+			if (trace) {
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%d,%.3f,%.3f\n",
+					   t, roll, pitch, balance, cmd.left, cmd.right,
+					   rc.mode, cmd_throttle, cmd_turn);
+			} else {
+				printf("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+					   t, roll, pitch, balance, cmd.left, cmd.right);
+			}
 		}
 	}
 	free(rc_entries);

@@ -2,11 +2,13 @@
 #define RC_INPUT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
     float throttle;
     float turn;
     bool enabled;
+    uint8_t mode;
 } rc_cmd_t;
 
 typedef struct {

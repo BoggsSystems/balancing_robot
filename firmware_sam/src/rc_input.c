@@ -10,6 +10,7 @@ void rc_init(rc_parser_t *p) {
     p->last.throttle = 0.0f;
     p->last.turn = 0.0f;
     p->last.enabled = false;
+    p->last.mode = 0;
 }
 
 static float clamp_unit(float v) {
@@ -23,26 +24,38 @@ static float clamp_unit(float v) {
 }
 
 static bool parse_line(const char *line, rc_cmd_t *out) {
-    // Expected format: "throttle,turn,enable"
-    // Example: "0.10,-0.25,1"
+    // Expected format: "throttle,turn,enable[,mode]"
+    // Example: "0.10,-0.25,1,1"
     char tmp[64];
     strncpy(tmp, line, sizeof(tmp) - 1);
     tmp[sizeof(tmp) - 1] = '\0';
 
     char *save = NULL;
     char *tok = strtok_r(tmp, ",", &save);
-    float vals[3];
+    float vals[4];
     int count = 0;
-    while (tok && count < 3) {
+    while (tok && count < 4) {
         vals[count++] = strtof(tok, NULL);
         tok = strtok_r(NULL, ",", &save);
     }
-    if (count != 3) {
+    if (count < 3) {
         return false;
     }
     out->throttle = clamp_unit(vals[0]);
     out->turn = clamp_unit(vals[1]);
     out->enabled = (vals[2] != 0.0f);
+    if (count >= 4) {
+        int mode = (int)vals[3];
+        if (mode < 0) {
+            mode = 0;
+        }
+        if (mode > 255) {
+            mode = 255;
+        }
+        out->mode = (uint8_t)mode;
+    } else {
+        out->mode = 0;
+    }
     return true;
 }
 
