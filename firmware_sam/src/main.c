@@ -24,8 +24,10 @@
 #define RC_TIMEOUT_S    1.0f
 #define MAX_TILT_DEG    40.0f
 
-// LED pin on SAME51 Curiosity Nano (directly, typical is PA14)
-#define LED_PIN 14
+// LED pins
+#define LED_PIN 14       // Curiosity Nano amber LED (PA14, active-low)
+#define GREEN_LED_PIN 10 // Robot green LED (PA10)
+#define RED_LED_PIN 11   // Robot red LED (PA11)
 
 // Motor pins (adjust to your wiring)
 #define LEFT_STEP_PIN   8
@@ -94,7 +96,7 @@ static void print_float(float val, int decimals) {
 }
 
 static void led_init(void) {
-    PORTA->DIRSET = (1 << LED_PIN);
+    PORTA->DIRSET = (1 << LED_PIN) | (1 << GREEN_LED_PIN) | (1 << RED_LED_PIN);
 }
 
 static void led_on(void) {
@@ -110,6 +112,22 @@ static void led_toggle(void) {
     PORTA->OUTTGL = (1 << LED_PIN);
 }
 
+static void green_on(void) {
+    PORTA->OUTSET = (1 << GREEN_LED_PIN);
+}
+
+static void green_off(void) {
+    PORTA->OUTCLR = (1 << GREEN_LED_PIN);
+}
+
+static void red_on(void) {
+    PORTA->OUTSET = (1 << RED_LED_PIN);
+}
+
+static void red_off(void) {
+    PORTA->OUTCLR = (1 << RED_LED_PIN);
+}
+
 // Convert angle to degrees for display
 static float rad_to_deg(float rad) {
     return rad * 180.0f / 3.14159265f;
@@ -119,17 +137,26 @@ int main(void) {
     system_init();
     system_systick_init(SYSTICK_HZ);
     led_init();
+    // Boot marker: blink amber LED so we know new firmware is running
+    for (int i = 0; i < 6; i++) {
+        led_toggle();
+        delay_ms(150);
+    }
     uart_init(UART_BAUD);
     spi_init();
     if (!bmi088_init()) {
         uart_write_str("BMI088 init failed\r\n");
         while (1) {
             led_toggle();
+            red_on();
+            green_on();
             delay_ms(200);
         }
     }
 
     uart_write_str("SAME51 Balancing Robot Ready\r\n");
+    red_off();
+    green_on();
 
     // Initialize motors
     tmc2209_t motor_left, motor_right;

@@ -24,6 +24,26 @@ static inline char *strncpy(char *dst, const char *src, size_t n) {
     return dst;
 }
 
+static inline int strcmp(const char *a, const char *b) {
+    while (*a && (*a == *b)) {
+        a++;
+        b++;
+    }
+    return (int)((unsigned char)*a - (unsigned char)*b);
+}
+
+static inline int strncmp(const char *a, const char *b, size_t n) {
+    while (n > 0 && *a && (*a == *b)) {
+        a++;
+        b++;
+        n--;
+    }
+    if (n == 0) {
+        return 0;
+    }
+    return (int)((unsigned char)*a - (unsigned char)*b);
+}
+
 static inline void *memset(void *s, int c, size_t n) {
     uint8_t *p = (uint8_t *)s;
     while (n--) *p++ = (uint8_t)c;
