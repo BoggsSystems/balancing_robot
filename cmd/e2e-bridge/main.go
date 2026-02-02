@@ -28,6 +28,7 @@ func main() {
 	imuStreamer := flag.String("imu-streamer", "./bin/imu-streamer", "path to imu-streamer binary")
 	sim := flag.String("sim", "./firmware/tools/sim", "path to firmware sim binary")
 	simStepHz := flag.Float64("sim-step-hz", 10000, "step-hz for sim (enables pos_left/pos_right output for distance)")
+	logTelemetry := flag.Bool("log-telemetry", false, "log DIST/VEL/ACC every ~1s to verify telemetry pipeline")
 	flag.Parse()
 
 	// Build sim args (--step-hz enables odometry output: pos_left, pos_right)
@@ -119,7 +120,8 @@ func main() {
 	// Shared latest telemetry (radians from sim; we convert when sending)
 	// With --step-hz, sim outputs "t,roll,pitch,balance,left,right,pos_left,pos_right"
 	const metersPerStep = 3.14159265 * 0.06 / 3200
-	const simToSteps = 100.0 // sim motor_mix limit 10 vs firmware 1000
+	const simToSteps = 100.0  // sim motor_mix limit 10 vs firmware 1000
+	const simDistanceScale = 22.0 // calibrate so ~0.5 m/s at throttle 0.3 (raw sim ~0.02 m/s)
 
 	var mu sync.Mutex
 	latestRoll := 0.0
@@ -132,7 +134,9 @@ func main() {
 	// Sim reader: parse "t,roll,pitch,balance,left,right" or with step-hz: "...pos_left,pos_right"
 	go func() {
 		sc := bufio.NewScanner(simOut)
+		var simLineCount int
 		for sc.Scan() {
+			simLineCount++
 			line := sc.Text()
 			if line == "" {
 				continue
@@ -155,10 +159,10 @@ func main() {
 				posL, e1 := strconv.ParseFloat(parts[6], 64)
 				posR, e2 := strconv.ParseFloat(parts[7], 64)
 				if e1 == nil && e2 == nil {
-					dist = 0.5 * (posL + posR) * simToSteps * metersPerStep
+					dist = 0.5 * (posL + posR) * simToSteps * metersPerStep * simDistanceScale
 				}
 			}
-			vel = 0.5 * (left + right) * simToSteps * metersPerStep
+			vel = 0.5 * (left + right) * simToSteps * metersPerStep * simDistanceScale
 
 			mu.Lock()
 			latestRoll = roll
@@ -168,6 +172,9 @@ func main() {
 			latestAccel = 0.0 // sim has no accel
 			hasTelemetry = true
 			mu.Unlock()
+			if *logTelemetry && len(parts) >= 8 && simLineCount%200 == 0 {
+				log.Printf("[sim] cols=8 DIST=%.3f VEL=%.2f left=%.2f right=%.2f", dist, vel, left, right)
+			}
 		}
 		if err := sc.Err(); err != nil {
 			log.Printf("sim stdout read: %v", err)
@@ -207,6 +214,7 @@ func main() {
 			go func(c net.Conn, st *connState) {
 				defer ticker.Stop()
 				defer c.Close()
+				var sendCount int
 				for range ticker.C {
 					st.mu.Lock()
 					on := st.streaming
@@ -232,6 +240,13 @@ func main() {
 					}
 					if _, err := c.Write([]byte(msg)); err != nil {
 						break
+					}
+					sendCount++
+					if *logTelemetry && !dis && sendCount%20 == 0 {
+						mu.Lock()
+						d, v, a := latestDist, latestVel, latestAccel
+						mu.Unlock()
+						log.Printf("[telemetry] send DIST=%.3f VEL=%.2f ACC=%.2f", d, v, a)
 					}
 				}
 			}(conn, state)

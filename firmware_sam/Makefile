@@ -28,9 +28,12 @@ SRC += src/tmc2209.c src/main.c
 
 OBJ := $(SRC:src/%.c=$(BUILD)/%.o)
 
+# Path MPLAB X expects for Run/Program (nbproject/Makefile-variables.mk)
+MPLAB_HEX := dist/default/production/firmware_sam.production.hex
+
 .PHONY: all clean flash
 
-all: $(BUILD)/$(TARGET).bin
+all: $(BUILD)/$(TARGET).bin $(MPLAB_HEX)
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -45,8 +48,13 @@ $(BUILD)/$(TARGET).elf: $(OBJ)
 $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
 	$(OBJCOPY) -O binary $< $@
 
+# So MPLAB X Run/Program finds the image (same path as CND_ARTIFACT_PATH_default)
+$(MPLAB_HEX): $(BUILD)/$(TARGET).elf
+	@mkdir -p dist/default/production
+	$(OBJCOPY) -O ihex $< $@
+
 flash: $(BUILD)/$(TARGET).bin
 	@echo "Use Microchip tools or OpenOCD to flash"
 
 clean:
-	rm -rf $(BUILD)
+	rm -rf $(BUILD) dist

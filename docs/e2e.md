@@ -45,6 +45,7 @@ Options (via `go run ./cmd/e2e-bridge`):
 - `--motion` – motion type for imu-streamer (overrides config), e.g. `static` for balancing-at-0
 - `--imu-streamer` – path to binary (default `./bin/imu-streamer`)
 - `--sim` – path to sim (default `./firmware/tools/sim`)
+- `--log-telemetry` – log DIST/VEL/ACC every ~1s (bridge) and sim cols=8 every ~5s; use to verify telemetry pipeline for path plotting
 
 ## 2. Run the iOS app
 

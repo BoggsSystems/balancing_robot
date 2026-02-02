@@ -14,24 +14,24 @@ void tmc2209_init(tmc2209_t *m, uint8_t step_pin, uint8_t dir_pin, uint8_t en_pi
     m->target_speed = 0;
     m->step_accumulator = 0;
 
-    // Configure pins as outputs
-    PORTA->DIRSET = (1 << step_pin) | (1 << dir_pin) | (1 << en_pin);
+    // Configure pins as outputs (ARTU 3: motor pins on PORTB)
+    PORTB->DIRSET = (1 << step_pin) | (1 << dir_pin) | (1 << en_pin);
 
     // Start with motor disabled (EN high)
-    PORTA->OUTSET = (1 << en_pin);
+    PORTB->OUTSET = (1 << en_pin);
 
     // Default direction
-    PORTA->OUTCLR = (1 << dir_pin);
+    PORTB->OUTCLR = (1 << dir_pin);
 
     // Step pin low
-    PORTA->OUTCLR = (1 << step_pin);
+    PORTB->OUTCLR = (1 << step_pin);
 }
 
 void tmc2209_enable(tmc2209_t *m, int enable) {
     if (enable) {
-        PORTA->OUTCLR = (1 << m->en_pin);  // EN low = enabled
+        PORTB->OUTCLR = (1 << m->en_pin);  // EN low = enabled
     } else {
-        PORTA->OUTSET = (1 << m->en_pin);  // EN high = disabled
+        PORTB->OUTSET = (1 << m->en_pin);  // EN high = disabled
     }
 }
 
@@ -40,20 +40,20 @@ void tmc2209_set_speed(tmc2209_t *m, int32_t steps_per_sec) {
 
     // Set direction
     if (steps_per_sec >= 0) {
-        PORTA->OUTCLR = (1 << m->dir_pin);
+        PORTB->OUTCLR = (1 << m->dir_pin);
     } else {
-        PORTA->OUTSET = (1 << m->dir_pin);
+        PORTB->OUTSET = (1 << m->dir_pin);
     }
 }
 
 void tmc2209_step(tmc2209_t *m) {
     // Generate step pulse
-    PORTA->OUTSET = (1 << m->step_pin);
+    PORTB->OUTSET = (1 << m->step_pin);
     // Brief delay (TMC2209 needs ~100ns minimum)
     for (volatile int i = 0; i < 10; i++) {
         __asm__("nop");
     }
-    PORTA->OUTCLR = (1 << m->step_pin);
+    PORTB->OUTCLR = (1 << m->step_pin);
 
     // Update position
     if (m->target_speed >= 0) {

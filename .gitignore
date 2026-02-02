@@ -18,3 +18,4 @@ ios_app/.build/
 # Python
 __pycache__/
 *.pyc
+/firmware_sam/dist/

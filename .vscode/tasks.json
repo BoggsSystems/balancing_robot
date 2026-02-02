@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build firmware (make)",
+      "type": "shell",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceFolder}/firmware_sam",
+        "env": {}
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Clean firmware",
+      "type": "shell",
+      "command": "make clean",
+      "options": {
+        "cwd": "${workspaceFolder}/firmware_sam"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Flash firmware (drag-drop)",
+      "type": "shell",
+      "command": "make && (cp dist/default/production/firmware_sam.production.hex /Volumes/CURIOSITY/ && echo 'Flashed. Board will program automatically.' || echo 'CURIOSITY volume not found. Plug in the Curiosity Nano (USB) and run this task again.')",
+      "options": {
+        "cwd": "${workspaceFolder}/firmware_sam"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}

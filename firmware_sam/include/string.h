@@ -57,17 +57,6 @@ static inline void *memcpy(void *dst, const void *src, size_t n) {
     return dst;
 }
 
-static inline int strcmp(const char *a, const char *b) {
-    while (*a && *b && *a == *b) { a++; b++; }
-    return (unsigned char)*a - (unsigned char)*b;
-}
-
-static inline int strncmp(const char *a, const char *b, size_t n) {
-    while (n > 0 && *a && *b && *a == *b) { a++; b++; n--; }
-    if (n == 0) return 0;
-    return (unsigned char)*a - (unsigned char)*b;
-}
-
 static inline char *strtok_r(char *str, const char *delim, char **saveptr) {
     char *start;
     if (str) {

@@ -4,13 +4,15 @@
 // For simplicity, we use the default clock configuration.
 
 void system_init(void) {
-    // Enable SERCOM0 and SERCOM1 in MCLK
+    // Enable SERCOM0, SERCOM1, SERCOM5 in MCLK
     MCLK->APBAMASK |= (1 << 12); // SERCOM0
     MCLK->APBAMASK |= (1 << 13); // SERCOM1
+    MCLK->APBCMASK |= (1 << 3);  // SERCOM5 (EDBG virtual serial on PB16/PB17)
 
-    // Route GCLK0 (48 MHz) to SERCOM0 and SERCOM1
+    // Route GCLK0 (48 MHz) to SERCOM0, SERCOM1, SERCOM5
     GCLK->PCHCTRL[GCLK_SERCOM0_CORE] = (1 << 6) | 0; // Enable, GCLK0
     GCLK->PCHCTRL[GCLK_SERCOM1_CORE] = (1 << 6) | 0; // Enable, GCLK0
+    GCLK->PCHCTRL[GCLK_SERCOM5_CORE] = (1 << 6) | 0; // Enable, GCLK0
 }
 
 void system_systick_init(uint32_t tick_hz) {

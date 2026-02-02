@@ -25,18 +25,18 @@
 #define RC_TIMEOUT_S    1.0f
 #define MAX_TILT_DEG    40.0f
 
-// LED pins
-#define LED_PIN 14       // Curiosity Nano amber LED (PA14, active-low)
-#define GREEN_LED_PIN 10 // Robot green LED (PA10)
-#define RED_LED_PIN 11   // Robot red LED (PA11)
+// LED pins — Green PA11, Red PA10; PA14 = Curiosity Nano onboard amber
+#define LED_PIN 14           // Curiosity Nano amber (PA14, active-low)
+#define GREEN_LED_PIN 11     // G LED (PA11)
+#define RED_LED_PIN 10       // R LED (PA10)
 
-// Motor pins (adjust to your wiring)
-#define LEFT_STEP_PIN   8
-#define LEFT_DIR_PIN    9
-#define LEFT_EN_PIN     10
-#define RIGHT_STEP_PIN  11
-#define RIGHT_DIR_PIN   12
-#define RIGHT_EN_PIN    13
+// Motor pins — ARTU 3: all on PORTB (L: STEP PB13, DIR PB0, EN PB1; R: STEP PB12, DIR PB7, EN PB6)
+#define LEFT_STEP_PIN   13
+#define LEFT_DIR_PIN    0
+#define LEFT_EN_PIN     1
+#define RIGHT_STEP_PIN  12
+#define RIGHT_DIR_PIN   7
+#define RIGHT_EN_PIN    6
 
 extern void system_init(void);
 extern void system_systick_init(uint32_t tick_hz);
@@ -114,19 +114,21 @@ static void led_toggle(void) {
 }
 
 static void green_on(void) {
-    PORTA->OUTSET = (1 << GREEN_LED_PIN);
-}
-
-static void green_off(void) {
+    // External LEDs are wired active-low (like the amber LED):
+    // drive low = ON, high = OFF.
     PORTA->OUTCLR = (1 << GREEN_LED_PIN);
 }
 
+static void green_off(void) {
+    PORTA->OUTSET = (1 << GREEN_LED_PIN);
+}
+
 static void red_on(void) {
-    PORTA->OUTSET = (1 << RED_LED_PIN);
+    PORTA->OUTCLR = (1 << RED_LED_PIN);
 }
 
 static void red_off(void) {
-    PORTA->OUTCLR = (1 << RED_LED_PIN);
+    PORTA->OUTSET = (1 << RED_LED_PIN);
 }
 
 // Convert angle to degrees for display
@@ -144,20 +146,21 @@ int main(void) {
         delay_ms(150);
     }
     uart_init(UART_BAUD);
+    uart_write_str("Boot\r\n");  /* First UART output: confirms MCU and SERCOM5 are alive */
     spi_init();
     if (!bmi088_init()) {
         uart_write_str("BMI088 init failed\r\n");
         while (1) {
+            // IMU error: just blink amber so we know something is wrong
             led_toggle();
-            red_on();
-            green_on();
             delay_ms(200);
         }
     }
 
     uart_write_str("SAME51 Balancing Robot Ready\r\n");
-    red_off();
+    // Status: solid green, red off
     green_on();
+    red_off();
 
     // Initialize motors
     tmc2209_t motor_left, motor_right;
@@ -204,6 +207,21 @@ int main(void) {
             continue;
         }
         last_tick = control_ticks;
+
+        // Amber LED (PA14): 0.5 s on, 0.5 s off as a heartbeat
+        if ((control_ticks / 200) % 2 == 0) {
+            led_on();
+        } else {
+            led_off();
+        }
+
+        // Keep green LED solid on; don't touch red here
+        green_on();
+
+        // Heartbeat every 1 s so serial link can be verified without relying on boot messages
+        if (control_ticks > 0 && (control_ticks % 400) == 0) {
+            uart_write_str("HB\r\n");
+        }
         // Poll XBee for RC commands
         if (rc_poll(&rc_parser, &rc)) {
             last_rc_tick = control_ticks;
@@ -213,13 +231,11 @@ int main(void) {
         static int last_enabled = 0;
         if (rc.enabled != last_enabled) {
             if (rc.enabled) {
-                led_on();
                 tmc2209_enable(&motor_left, 1);
                 tmc2209_enable(&motor_right, 1);
                 state = ROBOT_STANDUP;
                 standup_elapsed = 0.0f;
             } else {
-                led_off();
                 tmc2209_enable(&motor_left, 0);
                 tmc2209_enable(&motor_right, 0);
                 motion_script_reset(&script);

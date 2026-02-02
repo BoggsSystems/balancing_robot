@@ -6,6 +6,7 @@
 // Base addresses
 #define SERCOM0_BASE 0x40003000UL
 #define SERCOM1_BASE 0x40003400UL
+#define SERCOM5_BASE 0x40004400UL
 #define PORT_BASE    0x41008000UL
 #define GCLK_BASE    0x40001C00UL
 #define MCLK_BASE    0x40000800UL
@@ -81,6 +82,7 @@ typedef struct {
 
 #define SERCOM0_USART ((SercomUsart *)SERCOM0_BASE)
 #define SERCOM1_SPI   ((SercomSpi *)SERCOM1_BASE)
+#define SERCOM5_USART ((SercomUsart *)SERCOM5_BASE)
 
 // GCLK
 typedef struct {
@@ -144,6 +146,7 @@ typedef struct {
 // GCLK peripheral channel IDs
 #define GCLK_SERCOM0_CORE 7
 #define GCLK_SERCOM1_CORE 8
+#define GCLK_SERCOM5_CORE 12
 
 // Cortex-M4 NVIC
 #define NVIC_ISER ((volatile uint32_t *)0xE000E100UL)

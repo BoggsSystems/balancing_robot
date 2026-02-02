@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "mplab-core-da",
+      "request": "launch",
+      "name": "MPLAB Debug (balancing_robot)",
+      "projectPath": "${workspaceFolder}",
+      "configuration": "default",
+      "preLaunchTask": "Build firmware (make)"
+    }
+  ]
+}

@@ -116,6 +116,16 @@ struct MovementPattern: Identifiable, Equatable {
         icon: "waveform.path.ecg"
     )
 
+    /// Default path scale in meters for the overhead plot (used when no user setting is saved).
+    static func defaultPathScaleM(for pattern: MovementPattern) -> Double {
+        switch pattern.mode {
+        case 5: return 0.15   // Spin
+        case 6: return 0.35   // Stop-and-Go
+        case 9, 10, 11: return 0.2  // Balance
+        default: return 1.0   // Square, Circle, Figure-8, Slalom
+        }
+    }
+
     static let all: [MovementPattern] = [
         manual,
         circle,

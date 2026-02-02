@@ -32,6 +32,10 @@ run-e2e:
 e2e-test:
 	@python3 tools/e2e_startup_test.py && python3 tools/e2e_movement_test.py
 
+# Trace telemetry for path plotting: bridge must be running. Usage: make trace-telemetry [MODE=1] [SEC=4]
+trace-telemetry:
+	@python3 tools/trace_telemetry_e2e.py $(or $(MODE),1) $(or $(SEC),4)
+
 # Open Dictation settings and show how to use voice input in Cursor
 voice-input:
 	@bash tools/run_voice_input_mac.sh

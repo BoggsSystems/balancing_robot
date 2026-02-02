@@ -19,6 +19,7 @@ final class E2EBluetoothService {
     private var connection: NWConnection?
     private var receiveBuffer = ""
     private let queue = DispatchQueue(label: "E2EBluetoothService")
+    private var telemetryLogCount = 0
 
     init(host: String = "127.0.0.1", port: UInt16 = 9001) {
         self.host = host
@@ -109,6 +110,13 @@ final class E2EBluetoothService {
             let line = String(receiveBuffer[..<idx])
             receiveBuffer = String(receiveBuffer[receiveBuffer.index(after: idx)...])
             if let telemetry = TelemetryParser.parse(line) {
+                telemetryLogCount += 1
+                if telemetryLogCount % 20 == 0 {
+                    let d = telemetry.distanceM.map { String(format: "%.3f", $0) } ?? "nil"
+                    let v = telemetry.velocityMps.map { String(format: "%.2f", $0) } ?? "nil"
+                    let a = telemetry.accelFwd.map { String(format: "%.2f", $0) } ?? "nil"
+                    print("[E2E telemetry] recv DIST=\(d) VEL=\(v) ACC=\(a)")
+                }
                 onTelemetryReceived?(telemetry)
                 onAttitudeReceived?(telemetry.attitude)
             } else if let att = AttitudeParser.parse(line) {

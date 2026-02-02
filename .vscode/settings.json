@@ -1,0 +1,6 @@
+{
+    "mplab.clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/_build/balancing_robot/default"
+    ],
+    "mplab.clangd.path": ""
+}
